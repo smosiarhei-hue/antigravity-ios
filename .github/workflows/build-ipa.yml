@@ -208,14 +208,16 @@ jobs:
           GH_PAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BUNDLE_ID: ${{ env.BUNDLE_ID }}
           MARKETING_VERSION: ${{ env.MARKETING_VERSION }}
+          BUILD_NUMBER: ${{ env.BUILD_NUMBER }}
         run: python3 .github/scripts/deploy_ota_pages.py
 
-      - name: Send IPA to Telegram bot
+      - name: Send IPA or installation link to configured Telegram chat
         if: always()
         env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN || '8325367009:AAEU-zJOUqpmo_fEqSeoU7OjYq5uRHgzyfM' }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID || '8559869613' }}
           IPA_IS_SIGNED: ${{ env.IPA_IS_SIGNED }}
+          OTA_PUBLISHED: ${{ steps.ota.outcome == 'success' }}
           MARKETING_VERSION: ${{ env.MARKETING_VERSION }}
           BUILD_NUMBER: ${{ env.BUILD_NUMBER }}
         run: |

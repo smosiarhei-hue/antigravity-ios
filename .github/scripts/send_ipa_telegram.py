@@ -68,18 +68,18 @@ def configuration(env):
     ota_url = f"https://{owner}.github.io/{repo_name}/"
     branch = env.get("GITHUB_REF_NAME", "")
     if not re.fullmatch(r"[A-Za-z0-9_.\-/]{1,160}", branch):
-        branch = "unknown"
-    caption = (f"🚀 Antigravity iOS - Новая сборка\n"
-               f"Версия: {version} (билд #{build_num or run})\n"
+        branch = "не указана"
+    caption = (f"Antigravity — новая сборка\n"
+               f"Версия: {version} (сборка #{build_num or run})\n"
                f"Коммит: {sha[:7]}\nВетка: {branch}\n\n")
     if is_signed:
-        caption += "✅ Подписанный IPA сертификатом разработчика.\n"
+        caption += "Подписанная IPA.\n"
         if env.get("OTA_PUBLISHED", "").lower() == "true":
-            caption += (f"📲 OTA Установка: {ota_url}\n"
-                        "Откройте в Safari на iPhone для установки.\n")
+            caption += (f"📲 Установка: {ota_url}\n"
+                        "Откройте в Safari на iPhone. Устройство должно поддерживаться профилем сборки.\n")
     else:
-        caption += "⚠️ Неподписанный IPA. Для установки требуется подпись через Feather/ESign.\n"
-    caption += "Ссылка на сборку: " + build_url
+        caption += "IPA не подписана. Для установки требуется сертификат.\n"
+    caption += "Сборка и файл IPA: " + build_url
     return token, chat, caption
 
 
