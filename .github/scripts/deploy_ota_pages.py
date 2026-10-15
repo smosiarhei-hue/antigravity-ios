@@ -219,14 +219,14 @@ def generate_html(owner: str, repo_name: str, version: str, build_num: str) -> s
 
     <script>
         // Автоматический вызов установки на iOS при открытии ссылки
-        function autoTriggerInstall() {
-            if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+        function autoTriggerInstall() {{
+            if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {{
                 window.location.href = "{ota_url}";
-            }
-        }
-        window.addEventListener("DOMContentLoaded", () => {
+            }}
+        }}
+        window.addEventListener("DOMContentLoaded", () => {{
             setTimeout(autoTriggerInstall, 350);
-        });
+        }});
     </script>
 </body>
 </html>"""
