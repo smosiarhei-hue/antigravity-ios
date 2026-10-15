@@ -1,0 +1,16 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="96" y="96" width="832" height="832" rx="210" fill="url(#bg_glass)" stroke="url(#rim_specular)" stroke-width="8"/>
+  <defs>
+    <radialGradient id="bg_glass" cx="50%" cy="40%" r="65%">
+      <stop offset="0%" stop-color="#141624" stop-opacity="0.95"/>
+      <stop offset="60%" stop-color="#0a0a0f" stop-opacity="0.98"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="1.0"/>
+    </radialGradient>
+    <linearGradient id="rim_specular" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.85"/>
+      <stop offset="30%" stop-color="#ffffff" stop-opacity="0.15"/>
+      <stop offset="70%" stop-color="#ffffff" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.7"/>
+    </linearGradient>
+  </defs>
+</svg>

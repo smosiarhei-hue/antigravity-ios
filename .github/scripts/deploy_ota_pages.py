@@ -9,7 +9,7 @@ import sys
 import tempfile
 
 
-def generate_manifest(bundle_id: str, version: str, ipa_url: str, title: str = "Antigravity") -> str:
+def generate_manifest(bundle_id: str, version: str, ipa_url: str, title: str = "ZeroG") -> str:
     return f"""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -53,7 +53,7 @@ def generate_html(owner: str, repo_name: str, version: str, build_num: str) -> s
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Antigravity — Установка на iPhone</title>
+    <title>ZeroG — Установка на iPhone</title>
     <link rel="icon" type="image/png" href="AppIcon.png">
     <style>
         :root {{
@@ -181,7 +181,7 @@ def generate_html(owner: str, repo_name: str, version: str, build_num: str) -> s
             filter: brightness(0.9);
         }}
         .tip {{
-            margin-top: 18px;
+            margin-top: 14px;
             font-size: 13px;
             color: var(--text-secondary);
             line-height: 1.5;
@@ -189,6 +189,12 @@ def generate_html(owner: str, repo_name: str, version: str, build_num: str) -> s
             border-radius: 14px;
             padding: 12px;
             border: 1px solid rgba(255, 255, 255, 0.05);
+        }}
+        .tip-warning {{
+            border-left: 3px solid #FF9F0A;
+            background: rgba(255, 159, 10, 0.1);
+            color: #FFD60A;
+            text-align: left;
         }}
         .fallback-link {{
             margin-top: 14px;
@@ -209,10 +215,10 @@ def generate_html(owner: str, repo_name: str, version: str, build_num: str) -> s
 </head>
 <body>
     <div class="container">
-        <img src="AppIcon.png" alt="Antigravity iOS" class="app-icon" />
+        <img src="AppIcon.png" alt="ZeroG iOS" class="app-icon" />
 
-        <h1>Antigravity</h1>
-        <p class="subtitle">Автономный AI-агент для iOS • Swift 6</p>
+        <h1>ZeroG</h1>
+        <p class="subtitle">Автономный AI-агент Antigravity • Swift 6</p>
 
         <div class="badge">
             <span class="dot"></span>
@@ -235,18 +241,22 @@ def generate_html(owner: str, repo_name: str, version: str, build_num: str) -> s
         </div>
 
         <a id="installBtn" href="{ota_url}" class="btn-install">
-            📲 Установить на iPhone
+            📲 Установить ZeroG на iPhone
         </a>
 
+        <div class="tip tip-warning">
+            ⚠️ <b>Важно:</b> Если на вашем iPhone уже установлено приложение <b>Sonivo (Aura Player)</b>, обязательно <b>удалите его</b> перед установкой! Так как сертификат привязан к одному Bundle ID, iOS не сможет создать отдельную иконку, пока старое приложение не удалено.
+        </div>
+
         <div class="tip">
-            После нажатия или открытия ссылки в Safari появится окно iOS:<br>
-            <b>«{owner}.github.io собирается установить "Antigravity"»</b>.<br>
-            Нажмите <b>«Установить»</b> — приложение моментально начнёт загружаться на домашний экран.
+            После нажатия кнопки или перехода по ссылке в Safari появится окно iOS:<br>
+            <b>«{owner}.github.io собирается установить "ZeroG"»</b>.<br>
+            Нажмите <b>«Установить»</b> — приложение сразу появится на экране!
         </div>
 
         <a href="{direct_ipa}" class="fallback-link">Скачать прямой файл .ipa</a>
 
-        <p class="footer">Antigravity Cloud • Версия {version} (сборка #{build_num})</p>
+        <p class="footer">ZeroG Cloud • Версия {version} (сборка #{build_num})</p>
     </div>
 
     <script>

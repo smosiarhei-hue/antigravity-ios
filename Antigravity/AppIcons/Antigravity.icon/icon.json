@@ -20,59 +20,26 @@
           "fill-specializations": [
             {
               "value": {
-                "solid": "srgb:0.00000,0.94118,1.00000,1.00000"
+                "solid": "srgb:0.08000,0.09000,0.14000,1.00000"
               }
             },
             {
               "appearance": "dark",
               "value": {
-                "solid": "srgb:0.00000,0.94118,1.00000,1.00000"
+                "solid": "srgb:0.05000,0.05000,0.08000,1.00000"
               }
             },
             {
               "appearance": "tinted",
               "value": {
-                "solid": "extended-gray:1.00000,1.00000"
-              }
-            }
-          ],
-          "glass": false,
-          "hidden": false,
-          "image-name": "10-orbital-ring.svg",
-          "name": "10-orbital-ring",
-          "opacity": 1,
-          "position": {
-            "scale": 1,
-            "translation-in-points": [
-              0,
-              0
-            ]
-          }
-        },
-        {
-          "fill-specializations": [
-            {
-              "value": {
-                "solid": "srgb:0.12000,0.13000,0.18000,1.00000"
-              }
-            },
-            {
-              "appearance": "dark",
-              "value": {
-                "solid": "srgb:0.08000,0.08000,0.12000,1.00000"
-              }
-            },
-            {
-              "appearance": "tinted",
-              "value": {
-                "solid": "extended-gray:0.50000,1.00000"
+                "solid": "extended-gray:0.30000,1.00000"
               }
             }
           ],
           "glass": true,
           "hidden": false,
-          "image-name": "20-zero-g-sphere.svg",
-          "name": "20-zero-g-sphere",
+          "image-name": "10-glass-chamber.svg",
+          "name": "10-glass-chamber",
           "opacity": 1,
           "position": {
             "scale": 1,
@@ -86,13 +53,46 @@
           "fill-specializations": [
             {
               "value": {
-                "solid": "extended-gray:1.00000,1.00000"
+                "solid": "srgb:0.00000,0.72000,1.00000,1.00000"
               }
             },
             {
               "appearance": "dark",
               "value": {
-                "solid": "extended-gray:1.00000,1.00000"
+                "solid": "srgb:0.00000,0.72000,1.00000,1.00000"
+              }
+            },
+            {
+              "appearance": "tinted",
+              "value": {
+                "solid": "extended-gray:0.75000,1.00000"
+              }
+            }
+          ],
+          "glass": true,
+          "hidden": false,
+          "image-name": "20-lower-wave.svg",
+          "name": "20-lower-wave",
+          "opacity": 1,
+          "position": {
+            "scale": 1,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "fill-specializations": [
+            {
+              "value": {
+                "solid": "srgb:1.00000,0.36000,0.22000,1.00000"
+              }
+            },
+            {
+              "appearance": "dark",
+              "value": {
+                "solid": "srgb:1.00000,0.36000,0.22000,1.00000"
               }
             },
             {
@@ -104,8 +104,8 @@
           ],
           "glass": false,
           "hidden": false,
-          "image-name": "30-antigravity-core.svg",
-          "name": "30-antigravity-core",
+          "image-name": "30-upper-apex.svg",
+          "name": "30-upper-apex",
           "opacity": 1,
           "position": {
             "scale": 1,
@@ -119,14 +119,14 @@
       "lighting": "combined",
       "shadow": {
         "kind": "neutral",
-        "opacity": 0.35
+        "opacity": 0.40
       },
       "specular": true,
       "translucency": {
         "enabled": true,
-        "value": 0.25
+        "value": 0.30
       },
-      "name": "Antigravity"
+      "name": "ZeroG"
     }
   ],
   "supported-platforms": {

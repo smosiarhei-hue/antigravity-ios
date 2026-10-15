@@ -69,7 +69,7 @@ def configuration(env):
     branch = env.get("GITHUB_REF_NAME", "")
     if not re.fullmatch(r"[A-Za-z0-9_.\-/]{1,160}", branch):
         branch = "не указана"
-    caption = (f"Antigravity — новая сборка\n"
+    caption = (f"ZeroG (Antigravity Agent) — новая сборка\n"
                f"Версия: {version} (сборка #{build_num or run})\n"
                f"Коммит: {sha[:7]}\nВетка: {branch}\n\n")
     if is_signed:

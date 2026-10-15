@@ -11,15 +11,15 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Antigravity</string>
+	<string>ZeroG</string>
 	<key>CFBundleDisplayName</key>
-	<string>Antigravity</string>
+	<string>ZeroG</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>2.0.0</string>
+	<string>2.1.0</string>
 	<key>CFBundleVersion</key>
-	<string>2000</string>
+	<string>2100</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>

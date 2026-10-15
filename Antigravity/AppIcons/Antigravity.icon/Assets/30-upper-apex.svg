@@ -1,0 +1,12 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M185 640 C170 590, 270 410, 430 240 C480 190, 550 190, 600 240 C750 390, 840 590, 825 640 C810 680, 760 670, 720 610 C620 460, 560 300, 515 300 C470 300, 400 470, 290 610 C250 670, 200 680, 185 640 Z" fill="url(#apex_grad)" filter="drop-shadow(0 16px 36px rgba(255, 75, 110, 0.45))"/>
+  <defs>
+    <linearGradient id="apex_grad" x1="200" y1="600" x2="800" y2="600" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#B5179E"/>
+      <stop offset="25%" stop-color="#F72585"/>
+      <stop offset="50%" stop-color="#FF5A36"/>
+      <stop offset="75%" stop-color="#F72585"/>
+      <stop offset="100%" stop-color="#7209B7"/>
+    </linearGradient>
+  </defs>
+</svg>

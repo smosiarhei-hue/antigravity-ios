@@ -1,0 +1,11 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M190 655 C205 600, 310 440, 520 450 C710 460, 770 650, 835 680 C870 700, 840 750, 785 750 C680 750, 600 600, 520 600 C430 600, 310 740, 205 735 C175 735, 175 685, 190 655 Z" fill="url(#wave_grad)" filter="drop-shadow(0 12px 28px rgba(0, 180, 255, 0.45))"/>
+  <defs>
+    <linearGradient id="wave_grad" x1="200" y1="700" x2="820" y2="600" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7B2CBF"/>
+      <stop offset="35%" stop-color="#4361EE"/>
+      <stop offset="75%" stop-color="#00B4D8"/>
+      <stop offset="100%" stop-color="#00F0FF"/>
+    </linearGradient>
+  </defs>
+</svg>
