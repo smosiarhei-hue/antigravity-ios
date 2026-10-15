@@ -1,6 +1,6 @@
 import Foundation
 
-public struct ChatSession: Identifiable, Sendable, Hashable, Codable {
+public struct ChatSession: Identifiable, Sendable, Hashable {
     public let id: String
     public var title: String
     public var projectId: String

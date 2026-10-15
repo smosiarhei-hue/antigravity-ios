@@ -298,13 +298,15 @@ public struct ChatView: View {
                 statusBadge(tool.status)
             }
 
-            Text(tool.command)
-                .font(.system(size: 11, design: .monospaced))
-                .foregroundStyle(AntigravityTheme.textSecondary)
-                .padding(6)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(AntigravityTheme.background)
-                .clipShape(RoundedRectangle(cornerRadius: 6))
+            if let cmd = tool.command {
+                Text(cmd)
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundStyle(AntigravityTheme.textSecondary)
+                    .padding(6)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(AntigravityTheme.background)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+            }
 
             if let output = tool.output {
                 Text(output)
@@ -318,7 +320,7 @@ public struct ChatView: View {
                     Button {
                         session.approveTool(tool.id)
                     } label: {
-                        Text(l10n.approve)
+                        Text(l10n.allowAction)
                             .font(.system(size: 12, weight: .bold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 12)
@@ -330,7 +332,7 @@ public struct ChatView: View {
                     Button {
                         session.rejectTool(tool.id)
                     } label: {
-                        Text(l10n.reject)
+                        Text(l10n.rejectAction)
                             .font(.system(size: 12, weight: .bold))
                             .foregroundStyle(AntigravityTheme.danger)
                             .padding(.horizontal, 12)
@@ -374,7 +376,7 @@ public struct ChatView: View {
 
     private func statusTitle(_ status: ToolStatus) -> String {
         switch status {
-        case .pending: return l10n.pendingApproval
+        case .pending: return l10n.toolPending
         case .running: return "Выполняется"
         case .success: return "Успех"
         case .failed: return "Ошибка"
@@ -408,7 +410,7 @@ public struct ChatView: View {
     // MARK: - Slash Commands Menu
     private var slashCommandsMenu: some View {
         VStack(spacing: 4) {
-            ForEach(SlashCommand.commands) { slash in
+            ForEach(SlashCommand.availableCommands) { slash in
                 Button {
                     session.executeSlashCommand(slash)
                     showSlashMenu = false

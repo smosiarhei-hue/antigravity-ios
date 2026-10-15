@@ -9,6 +9,7 @@ public enum AntigravityTheme {
     
     public static let accent = Color(red: 0.35, green: 0.65, blue: 1.0)      // #58a6ff
     public static let accentPurple = Color(red: 0.64, green: 0.44, blue: 0.97) // #a371f7
+    public static let purple = accentPurple
     public static let success = Color(red: 0.25, green: 0.73, blue: 0.31)    // #3fb950
     public static let warning = Color(red: 0.85, green: 0.65, blue: 0.13)    // #d29922
     public static let danger = Color(red: 0.97, green: 0.32, blue: 0.29)     // #f85149
