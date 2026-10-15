@@ -1,6 +1,6 @@
 name: ZeroG
 options:
-  bundleIdPrefix: com.smoze
+  bundleIdPrefix: app.hare5681
   deploymentTarget:
     iOS: "17.0"
   createIntermediateGroups: true
@@ -29,7 +29,7 @@ targets:
         buildPhase: resources
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.smoze.zerog
+        PRODUCT_BUNDLE_IDENTIFIER: app.hare5681.zerog
         INFOPLIST_FILE: Antigravity/Resources/Info.plist
         INFOPLIST_KEY_CFBundleDisplayName: "ZeroG"
         MARKETING_VERSION: "2.1.0"

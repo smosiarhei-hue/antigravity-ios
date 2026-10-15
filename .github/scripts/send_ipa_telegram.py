@@ -69,8 +69,10 @@ def configuration(env):
     branch = env.get("GITHUB_REF_NAME", "")
     if not re.fullmatch(r"[A-Za-z0-9_.\-/]{1,160}", branch):
         branch = "не указана"
+    bundle_id = env.get("BUNDLE_ID", "app.hare5681.zerog")
     caption = (f"ZeroG (Antigravity Agent) — новая сборка\n"
                f"Версия: {version} (сборка #{build_num or run})\n"
+               f"Bundle ID: {bundle_id}\n"
                f"Коммит: {sha[:7]}\nВетка: {branch}\n\n")
     if is_signed:
         caption += "Подписанная IPA.\n"

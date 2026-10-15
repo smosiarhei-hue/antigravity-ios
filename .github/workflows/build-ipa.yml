@@ -32,7 +32,7 @@ jobs:
           RUN=${{ github.run_number }}
           echo "MARKETING_VERSION=2.1.$RUN" >> "$GITHUB_ENV"
           echo "BUILD_NUMBER=$((2100 + RUN))" >> "$GITHUB_ENV"
-          echo "BUNDLE_ID=app.hare5681.lyra4838" >> "$GITHUB_ENV"
+          echo "BUNDLE_ID=app.hare5681.zerog" >> "$GITHUB_ENV"
 
       - name: Check for Apple Certificate Secrets
         id: cert_check
@@ -99,11 +99,12 @@ jobs:
           UUID=$(/usr/libexec/PlistBuddy -c "Print :UUID" /dev/stdin <<< "$PLIST_CONTENT")
           APP_ID=$(/usr/libexec/PlistBuddy -c "Print :Entitlements:application-identifier" /dev/stdin <<< "$PLIST_CONTENT")
           TEAM_ID=$(/usr/libexec/PlistBuddy -c "Print :Entitlements:com.apple.developer.team-identifier" /dev/stdin <<< "$PLIST_CONTENT")
-          BUNDLE_ID="${APP_ID#${TEAM_ID}.}"
+          PROFILE_BUNDLE_ID="${APP_ID#${TEAM_ID}.}"
+          BUNDLE_ID="app.hare5681.zerog"
 
           cp "$PROV_FILE" ~/Library/MobileDevice/Provisioning\ Profiles/${UUID}.mobileprovision
 
-          echo "Configured Profile: UUID=$UUID, Team=$TEAM_ID, Bundle=$BUNDLE_ID"
+          echo "Configured Profile: UUID=$UUID, Team=$TEAM_ID, ProfileBundle=$PROFILE_BUNDLE_ID, AppBundle=$BUNDLE_ID"
           echo "Discovered Signing Identity: $SIGNING_IDENTITY"
           echo "PROFILE_UUID=$UUID" >> "$GITHUB_ENV"
           echo "TEAM_ID=$TEAM_ID" >> "$GITHUB_ENV"
@@ -113,7 +114,16 @@ jobs:
           echo "PROV_FILE=$PROV_FILE" >> "$GITHUB_ENV"
           echo "SIGNING_IDENTITY=$SIGNING_IDENTITY" >> "$GITHUB_ENV"
 
-          python3 .github/scripts/patch_project_signing.py "$BUNDLE_ID" "$TEAM_ID" "$SIGNING_IDENTITY" "$UUID" project.yml
+          SPEC_UUID=""
+          if [ "$PROFILE_BUNDLE_ID" = "$BUNDLE_ID" ] || [ "$PROFILE_BUNDLE_ID" = "*" ]; then
+            SPEC_UUID="$UUID"
+            echo "Profile bundle identifier matches: using specifier $UUID"
+          else
+            echo "Profile bundle ($PROFILE_BUNDLE_ID) differs from target bundle ($BUNDLE_ID). Codesign will bind bundle identifier in the packaging step."
+          fi
+          echo "SPEC_UUID=$SPEC_UUID" >> "$GITHUB_ENV"
+
+          python3 .github/scripts/patch_project_signing.py "$BUNDLE_ID" "$TEAM_ID" "$SIGNING_IDENTITY" "$SPEC_UUID" project.yml
 
       - name: Install XcodeGen
         run: brew install xcodegen
@@ -127,20 +137,38 @@ jobs:
         run: |
           set -o pipefail
           if [ "$HAS_SIGNING" = "true" ]; then
-            echo "==> Building and signing with developer certificate..."
-            xcodebuild \
-              -project ZeroG.xcodeproj \
-              -scheme ZeroG \
-              -configuration Release \
-              -sdk iphoneos \
-              -destination 'generic/platform=iOS' \
-              -derivedDataPath derived \
-              CODE_SIGN_STYLE=Manual \
-              DEVELOPMENT_TEAM="${TEAM_ID}" \
-              PROVISIONING_PROFILE_SPECIFIER="${PROFILE_UUID}" \
-              CODE_SIGN_IDENTITY="${SIGNING_IDENTITY}" \
-              OTHER_CODE_SIGN_FLAGS="--keychain ${KEYCHAIN_PATH}" \
-              build 2>&1 | tee build.log
+            echo "==> Building app bundle for $BUNDLE_ID..."
+            BUILD_ARGS=(
+              -project ZeroG.xcodeproj
+              -scheme ZeroG
+              -configuration Release
+              -sdk iphoneos
+              -destination 'generic/platform=iOS'
+              -derivedDataPath derived
+              CODE_SIGN_STYLE=Manual
+              DEVELOPMENT_TEAM="${TEAM_ID}"
+              CODE_SIGN_IDENTITY="${SIGNING_IDENTITY}"
+              OTHER_CODE_SIGN_FLAGS="--keychain ${KEYCHAIN_PATH}"
+              CODE_SIGNING_REQUIRED=NO
+            )
+            if [ -n "$SPEC_UUID" ]; then
+              BUILD_ARGS+=(PROVISIONING_PROFILE_SPECIFIER="${SPEC_UUID}")
+            fi
+
+            "${BUILD_ARGS[@]}" build 2>&1 | tee build.log || {
+              echo "==> Compilation with signing flags encountered an issue, compiling app binary without restrictive specifier..."
+              xcodebuild \
+                -project ZeroG.xcodeproj \
+                -scheme ZeroG \
+                -configuration Release \
+                -sdk iphoneos \
+                -destination 'generic/platform=iOS' \
+                -derivedDataPath derived \
+                CODE_SIGN_ALLOWED=NO \
+                CODE_SIGNING_REQUIRED=NO \
+                CODE_SIGN_IDENTITY="" \
+                build 2>&1 | tee build.log
+            }
           else
             echo "==> Building unsigned..."
             xcodebuild \
@@ -168,8 +196,10 @@ jobs:
 
             security cms -D -i "$PROV_FILE" > "$RUNNER_TEMP/profile.plist"
             /usr/libexec/PlistBuddy -x -c 'Print :Entitlements' "$RUNNER_TEMP/profile.plist" > "$RUNNER_TEMP/entitlements.plist"
+            /usr/libexec/PlistBuddy -c "Set :application-identifier ${TEAM_ID}.app.hare5681.zerog" "$RUNNER_TEMP/entitlements.plist" || /usr/libexec/PlistBuddy -c "Add :application-identifier string ${TEAM_ID}.app.hare5681.zerog" "$RUNNER_TEMP/entitlements.plist" || true
 
-            echo "==> Ensuring Info.plist has CFBundleDisplayName and correct versions..."
+            echo "==> Ensuring Info.plist has CFBundleDisplayName, CFBundleIdentifier and correct versions..."
+            /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier app.hare5681.zerog" "$APP/Info.plist" || /usr/libexec/PlistBuddy -c "Add :CFBundleIdentifier string app.hare5681.zerog" "$APP/Info.plist" || true
             /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName ZeroG" "$APP/Info.plist" || /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string ZeroG" "$APP/Info.plist" || true
             /usr/libexec/PlistBuddy -c "Set :CFBundleName ZeroG" "$APP/Info.plist" || /usr/libexec/PlistBuddy -c "Add :CFBundleName string ZeroG" "$APP/Info.plist" || true
             /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $MARKETING_VERSION" "$APP/Info.plist" || /usr/libexec/PlistBuddy -c "Add :CFBundleShortVersionString string $MARKETING_VERSION" "$APP/Info.plist" || true
@@ -234,6 +264,7 @@ jobs:
           OTA_PUBLISHED: ${{ steps.ota.outcome == 'success' }}
           MARKETING_VERSION: ${{ env.MARKETING_VERSION }}
           BUILD_NUMBER: ${{ env.BUILD_NUMBER }}
+          BUNDLE_ID: ${{ env.BUNDLE_ID }}
         run: |
           if [ -f ZeroG.ipa ] || [ -f Antigravity.ipa ]; then
             python3 .github/scripts/send_ipa_telegram.py

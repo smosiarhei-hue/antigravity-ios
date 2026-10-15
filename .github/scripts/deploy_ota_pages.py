@@ -280,7 +280,7 @@ def deploy(env=None):
 
     token = env.get("GH_PAGES_TOKEN", "").strip()
     repository = env.get("GITHUB_REPOSITORY", "").strip()
-    bundle_id = env.get("BUNDLE_ID", "app.hare5681.lyra4838").strip()
+    bundle_id = env.get("BUNDLE_ID", "app.hare5681.zerog").strip()
     version = env.get("MARKETING_VERSION", "1.0.0").strip()
     build_num = env.get("BUILD_NUMBER", "1").strip()
     temp_dir = Path(env.get("RUNNER_TEMP", tempfile.gettempdir()))

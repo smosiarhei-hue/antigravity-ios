@@ -34,7 +34,8 @@ def patch_project(project_path: Path, bundle_id: str, team_id: str, identity: st
         content,
     )
     content = re.sub(r"CODE_SIGNING_ALLOWED:\s*NO", "CODE_SIGNING_ALLOWED: YES", content)
-    content = re.sub(r"CODE_SIGNING_REQUIRED:\s*NO", "CODE_SIGNING_REQUIRED: YES", content)
+    signing_required = "YES" if profile_uuid else "NO"
+    content = re.sub(r"CODE_SIGNING_REQUIRED:\s*(NO|YES)", f"CODE_SIGNING_REQUIRED: {signing_required}", content)
     content = re.sub(
         r"CODE_SIGN_IDENTITY:\s*\"?[^\n\"]*\"?",
         f'CODE_SIGN_IDENTITY: "{identity}"',
