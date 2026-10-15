@@ -1,0 +1,26 @@
+# Xcode
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+*.xcworkspace/*
+!*.xcworkspace/contents.xcworkspacedata
+derived/
+build/
+*.ipa
+Payload/
+*.dSYM.zip
+*.dSYM
+
+# Python & CI
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Node & Tools
+node_modules/
+.env
