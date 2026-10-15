@@ -11,7 +11,7 @@
                     <key>kind</key>
                     <string>software-package</string>
                     <key>url</key>
-                    <string>https://github.com/smosiarhei-hue/antigravity-ios/releases/latest/download/Antigravity.ipa</string>
+                    <string>https://smosiarhei-hue.github.io/antigravity-ios/Antigravity.ipa</string>
                 </dict>
             </array>
             <key>metadata</key>
