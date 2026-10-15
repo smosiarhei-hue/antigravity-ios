@@ -16,7 +16,9 @@ def patch_project(project_path: Path, bundle_id: str, team_id: str, identity: st
     content = re.sub(r"PRODUCT_BUNDLE_IDENTIFIER:\s*([A-Za-z0-9_.-]+)", identifier, content)
     content = re.sub(r"CFBundleURLName:\s*[A-Za-z0-9_.-]+", f"CFBundleURLName: {bundle_id}", content)
     if profile_uuid:
-        start = content.find("  Antigravity:\n")
+        start = content.find("  ZeroG:\n")
+        if start == -1:
+            start = content.find("  Antigravity:\n")
         if start != -1:
             end = re.search(r"^  [A-Za-z][A-Za-z0-9_]*:\n", content[start + 1:], re.MULTILINE)
             stop = start + 1 + end.start() if end else len(content)

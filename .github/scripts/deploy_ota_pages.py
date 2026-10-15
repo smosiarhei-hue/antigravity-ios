@@ -46,7 +46,7 @@ def generate_manifest(bundle_id: str, version: str, ipa_url: str, title: str = "
 
 def generate_html(owner: str, repo_name: str, version: str, build_num: str) -> str:
     ota_url = f"itms-services://?action=download-manifest&url=https://{owner}.github.io/{repo_name}/manifest.plist"
-    direct_ipa = f"https://{owner}.github.io/{repo_name}/Antigravity.ipa"
+    direct_ipa = f"https://{owner}.github.io/{repo_name}/ZeroG.ipa"
 
     return f"""<!DOCTYPE html>
 <html lang="ru">
@@ -290,7 +290,7 @@ def deploy(env=None):
         return 0
 
     owner, repo_name = repository.split("/", 1)
-    ipa_url = f"https://{owner}.github.io/{repo_name}/Antigravity.ipa"
+    ipa_url = f"https://{owner}.github.io/{repo_name}/ZeroG.ipa"
 
     pages_dir = temp_dir / "gh_pages_deploy"
     if pages_dir.exists():
@@ -307,14 +307,19 @@ def deploy(env=None):
         print(f"Failed to clone gh-pages: {res.stderr}")
         return 1
 
-    ipa_src = Path("Antigravity.ipa")
+    ipa_src = Path("ZeroG.ipa")
     if not ipa_src.exists():
-        if Path("Antigravity-unsigned.ipa").exists():
+        if Path("Antigravity.ipa").exists():
+            ipa_src = Path("Antigravity.ipa")
+        elif Path("ZeroG-unsigned.ipa").exists():
+            ipa_src = Path("ZeroG-unsigned.ipa")
+        elif Path("Antigravity-unsigned.ipa").exists():
             ipa_src = Path("Antigravity-unsigned.ipa")
         else:
-            print("Antigravity.ipa not found for OTA deploy!")
+            print("ZeroG.ipa not found for OTA deploy!")
             return 1
 
+    shutil.copy2(ipa_src, pages_dir / "ZeroG.ipa")
     shutil.copy2(ipa_src, pages_dir / "Antigravity.ipa")
 
     manifest_content = generate_manifest(bundle_id=bundle_id, version=version, ipa_url=ipa_url)

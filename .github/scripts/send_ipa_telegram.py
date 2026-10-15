@@ -190,12 +190,16 @@ def record_status(code, env):
 def main(env=None, path=None, transport=post_document, message_transport=post_message):
     env = os.environ if env is None else env
     if path is None:
-        if Path("Antigravity.ipa").is_file():
+        if Path("ZeroG.ipa").is_file():
+            path = Path("ZeroG.ipa")
+        elif Path("Antigravity.ipa").is_file():
             path = Path("Antigravity.ipa")
+        elif Path("ZeroG-unsigned.ipa").is_file():
+            path = Path("ZeroG-unsigned.ipa")
         elif Path("Antigravity-unsigned.ipa").is_file():
             path = Path("Antigravity-unsigned.ipa")
         else:
-            path = Path("Antigravity.ipa")
+            path = Path("ZeroG.ipa")
     try:
         code = deliver(env, path, transport, message_transport)
     except DeliveryError as error:

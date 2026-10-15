@@ -1,4 +1,4 @@
-name: Antigravity
+name: ZeroG
 options:
   bundleIdPrefix: com.smoze
   deploymentTarget:
@@ -19,7 +19,7 @@ settings:
     CODE_SIGNING_REQUIRED: NO
     CODE_SIGN_IDENTITY: ""
 targets:
-  Antigravity:
+  ZeroG:
     type: application
     platform: iOS
     sources:
@@ -29,7 +29,7 @@ targets:
         buildPhase: resources
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.smoze.antigravity
+        PRODUCT_BUNDLE_IDENTIFIER: com.smoze.zerog
         INFOPLIST_FILE: Antigravity/Resources/Info.plist
         INFOPLIST_KEY_CFBundleDisplayName: "ZeroG"
         MARKETING_VERSION: "2.1.0"
@@ -37,3 +37,12 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         TARGETED_DEVICE_FAMILY: "1"
+schemes:
+  ZeroG:
+    build:
+      targets:
+        ZeroG: all
+    run:
+      config: Debug
+    archive:
+      config: Release

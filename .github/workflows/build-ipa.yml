@@ -129,8 +129,8 @@ jobs:
           if [ "$HAS_SIGNING" = "true" ]; then
             echo "==> Building and signing with developer certificate..."
             xcodebuild \
-              -project Antigravity.xcodeproj \
-              -scheme Antigravity \
+              -project ZeroG.xcodeproj \
+              -scheme ZeroG \
               -configuration Release \
               -sdk iphoneos \
               -destination 'generic/platform=iOS' \
@@ -144,8 +144,8 @@ jobs:
           else
             echo "==> Building unsigned..."
             xcodebuild \
-              -project Antigravity.xcodeproj \
-              -scheme Antigravity \
+              -project ZeroG.xcodeproj \
+              -scheme ZeroG \
               -configuration Release \
               -sdk iphoneos \
               -destination 'generic/platform=iOS' \
@@ -191,25 +191,28 @@ jobs:
 
             mkdir -p Payload
             cp -R "$APP" Payload/
-            zip -qry Antigravity.ipa Payload
-            cp Antigravity.ipa Antigravity-unsigned.ipa
+            zip -qry ZeroG.ipa Payload
+            cp ZeroG.ipa ZeroG-unsigned.ipa
+            cp ZeroG.ipa Antigravity.ipa
             echo "IPA_IS_SIGNED=true" >> "$GITHUB_ENV"
             echo "SUCCESS: Signed IPA packaged."
           else
             mkdir -p Payload
             cp -R "$APP" Payload/
-            zip -qry Antigravity-unsigned.ipa Payload
-            cp Antigravity-unsigned.ipa Antigravity.ipa
+            zip -qry ZeroG-unsigned.ipa Payload
+            cp ZeroG-unsigned.ipa ZeroG.ipa
+            cp ZeroG.ipa Antigravity.ipa
             echo "IPA_IS_SIGNED=false" >> "$GITHUB_ENV"
           fi
 
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Antigravity-ipa
+          name: ZeroG-ipa
           path: |
+            ZeroG.ipa
+            ZeroG-unsigned.ipa
             Antigravity.ipa
-            Antigravity-unsigned.ipa
           if-no-files-found: error
 
       - name: Deploy OTA to GitHub Pages
@@ -232,7 +235,7 @@ jobs:
           MARKETING_VERSION: ${{ env.MARKETING_VERSION }}
           BUILD_NUMBER: ${{ env.BUILD_NUMBER }}
         run: |
-          if [ -f Antigravity.ipa ] || [ -f Antigravity-unsigned.ipa ]; then
+          if [ -f ZeroG.ipa ] || [ -f Antigravity.ipa ]; then
             python3 .github/scripts/send_ipa_telegram.py
           else
             echo "No IPA generated, skipping Telegram delivery."
@@ -243,6 +246,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
+            ZeroG.ipa
+            ZeroG-unsigned.ipa
             Antigravity.ipa
-            Antigravity-unsigned.ipa
           generate_release_notes: true
