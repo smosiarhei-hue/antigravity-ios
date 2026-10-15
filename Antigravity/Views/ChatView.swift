@@ -5,10 +5,15 @@ public struct ChatView: View {
     @Environment(GoogleAuthManager.self) private var auth
     @Environment(LocalizationManager.self) private var l10n
     @Environment(AntigravityCoreAgent.self) private var agent
+    @Environment(SkillManager.self) private var skillManager
+    @Environment(ProjectSyncManager.self) private var projectManager
     
     @State private var inputText: String = ""
     @State private var expandedThinking: Set<String> = []
     @State private var showSlashMenu: Bool = false
+    @State private var showHistory: Bool = false
+    @State private var showSkills: Bool = false
+    @State private var showProjects: Bool = false
 
     public var body: some View {
         NavigationStack {
@@ -16,7 +21,7 @@ public struct ChatView: View {
                 AntigravityTheme.background.ignoresSafeArea()
 
                 VStack(spacing: 0) {
-                    // Top Session Status Bar
+                    // Top Session & Quota Status Bar
                     topBar
 
                     // Messages Scroll
@@ -34,7 +39,7 @@ public struct ChatView: View {
                             }
                             .padding(.horizontal, 16)
                             .padding(.top, 12)
-                            .padding(.bottom, 120)
+                            .padding(.bottom, 130)
                         }
                         .onChange(of: session.messages.count) { _, _ in
                             if let last = session.messages.last {
@@ -67,46 +72,89 @@ public struct ChatView: View {
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showHistory = true
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "clock.arrow.circlepath")
+                            Text("История")
+                                .font(.system(size: 13, weight: .semibold))
+                        }
+                        .foregroundStyle(AntigravityTheme.textSecondary)
+                    }
+                }
+
                 ToolbarItem(placement: .principal) {
-                    HStack(spacing: 8) {
+                    HStack(spacing: 6) {
                         Image(systemName: "sparkles")
                             .foregroundStyle(AntigravityTheme.accent)
                         Text(l10n.appTitle)
-                            .font(.system(size: 17, weight: .bold))
+                            .font(.system(size: 16, weight: .bold))
                             .foregroundStyle(AntigravityTheme.textPrimary)
                     }
                 }
+
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showSkills = true
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "wand.and.stars")
+                            Text("\(skillManager.activeSkills.count)")
+                                .font(.system(size: 11, weight: .bold))
+                        }
+                        .foregroundStyle(AntigravityTheme.accent)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(AntigravityTheme.accent.opacity(0.12))
+                        .clipShape(Capsule())
+                    }
+                }
+            }
+            .sheet(isPresented: $showHistory) {
+                ChatHistoryDrawer()
+            }
+            .sheet(isPresented: $showSkills) {
+                SkillsExplorerView()
+            }
+            .sheet(isPresented: $showProjects) {
+                ProjectsSyncView()
             }
         }
     }
 
-    // MARK: - Top Status Bar
+    // MARK: - Top Status Bar (Project Switcher + Token HUD)
     private var topBar: some View {
         HStack {
-            HStack(spacing: 6) {
-                Circle()
-                    .fill(AntigravityTheme.success)
-                    .frame(width: 8, height: 8)
-                Text(session.activeModel)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(AntigravityTheme.textSecondary)
+            // Project Selector Pill
+            Button {
+                showProjects = true
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "folder.fill")
+                        .font(.system(size: 11))
+                        .foregroundStyle(AntigravityTheme.purple)
+                    Text(projectManager.activeProject.name)
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(AntigravityTheme.textPrimary)
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundStyle(AntigravityTheme.textSecondary)
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(AntigravityTheme.surfaceSecondary)
+                .clipShape(Capsule())
             }
+
             Spacer()
-            HStack(spacing: 4) {
-                Image(systemName: "cloud.fill")
-                    .font(.system(size: 11))
-                    .foregroundStyle(AntigravityTheme.accent)
-                Text(agent.executionMode.rawValue)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(AntigravityTheme.textSecondary)
-            }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(AntigravityTheme.surfaceSecondary)
-            .clipShape(Capsule())
+
+            // Token & Free Quota HUD Pill
+            TokenHUDView()
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 8)
+        .padding(.vertical, 6)
         .background(AntigravityTheme.surface)
         .overlay(Rectangle().frame(height: 1).foregroundStyle(AntigravityTheme.border), alignment: .bottom)
     }
@@ -141,19 +189,19 @@ public struct ChatView: View {
                     )
 
                 if !message.tools.isEmpty {
-                    VStack(spacing: 8) {
-                        ForEach(message.tools, id: \.id) { tool in
+                    VStack(alignment: .leading, spacing: 6) {
+                        ForEach(message.tools) { tool in
                             toolCard(tool)
                         }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
                 Text(message.timestamp)
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(AntigravityTheme.textTertiary)
+                    .font(.system(size: 10))
+                    .foregroundStyle(AntigravityTheme.textSecondary)
                     .padding(.horizontal, 4)
             }
-            .frame(maxWidth: .infinity, alignment: message.role == .user ? .trailing : .leading)
 
             if message.role == .user {
                 userAvatar
@@ -164,32 +212,38 @@ public struct ChatView: View {
     private var agentAvatar: some View {
         ZStack {
             Circle()
-                .fill(AntigravityTheme.surfaceSecondary)
-                .frame(width: 30, height: 30)
-                .overlay(Circle().stroke(AntigravityTheme.border, lineWidth: 1))
+                .fill(
+                    LinearGradient(
+                        colors: [AntigravityTheme.accent, AntigravityTheme.purple],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 32, height: 32)
             Image(systemName: "sparkles")
-                .font(.system(size: 13))
-                .foregroundStyle(AntigravityTheme.accent)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundStyle(.white)
         }
     }
 
     private var userAvatar: some View {
         ZStack {
             Circle()
-                .fill(AntigravityTheme.accent.opacity(0.2))
-                .frame(width: 30, height: 30)
+                .fill(AntigravityTheme.surfaceSecondary)
+                .frame(width: 32, height: 32)
             Image(systemName: "person.fill")
-                .font(.system(size: 13))
-                .foregroundStyle(AntigravityTheme.accent)
+                .font(.system(size: 14))
+                .foregroundStyle(AntigravityTheme.textSecondary)
         }
     }
 
     // MARK: - Thinking Box
     private func thinkingBox(messageId: String, content: String) -> some View {
         let isExpanded = expandedThinking.contains(messageId)
+
         return VStack(alignment: .leading, spacing: 6) {
             Button {
-                withAnimation(AntigravityTheme.fluidSpring) {
+                withAnimation(AntigravityTheme.snappySpring) {
                     if isExpanded {
                         expandedThinking.remove(messageId)
                     } else {
@@ -199,13 +253,14 @@ public struct ChatView: View {
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "brain.head.profile")
-                        .foregroundStyle(AntigravityTheme.accentPurple)
-                    Text(l10n.thinkingTitle)
+                        .font(.system(size: 12))
+                        .foregroundStyle(AntigravityTheme.purple)
+                    Text("Мысли агента & Подбор скиллов")
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(AntigravityTheme.accentPurple)
+                        .foregroundStyle(AntigravityTheme.textSecondary)
                     Spacer()
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .font(.system(size: 11))
+                        .font(.system(size: 10, weight: .bold))
                         .foregroundStyle(AntigravityTheme.textSecondary)
                 }
             }
@@ -214,174 +269,206 @@ public struct ChatView: View {
                 Text(content)
                     .font(.system(size: 12, design: .monospaced))
                     .foregroundStyle(AntigravityTheme.textSecondary)
-                    .padding(.top, 4)
+                    .padding(8)
+                    .background(AntigravityTheme.surfaceSecondary)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
         .padding(10)
-        .background(AntigravityTheme.surfaceSecondary.opacity(0.7))
-        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .background(AntigravityTheme.surface.opacity(0.6))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(AntigravityTheme.accentPurple.opacity(0.3), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(AntigravityTheme.purple.opacity(0.3), lineWidth: 1)
         )
     }
 
     // MARK: - Tool Card
     private func toolCard(_ tool: ToolExecution) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             HStack {
-                HStack(spacing: 6) {
-                    Image(systemName: "terminal.fill")
-                        .font(.system(size: 12))
-                        .foregroundStyle(AntigravityTheme.accent)
-                    Text(tool.name)
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(AntigravityTheme.textPrimary)
-                }
-                Spacer()
-                statusPill(tool.status)
-            }
-
-            if let cmd = tool.command {
-                Text("$ \(cmd)")
-                    .font(.system(size: 11, design: .monospaced))
+                Image(systemName: "terminal.fill")
+                    .font(.system(size: 11))
                     .foregroundStyle(AntigravityTheme.accent)
-                    .padding(6)
-                    .background(AntigravityTheme.background)
-                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                Text(tool.name)
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(AntigravityTheme.textPrimary)
+                Spacer()
+                statusBadge(tool.status)
             }
 
-            if let out = tool.output {
-                Text(out)
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundStyle(AntigravityTheme.textSecondary)
+            Text(tool.command)
+                .font(.system(size: 11, design: .monospaced))
+                .foregroundStyle(AntigravityTheme.textSecondary)
+                .padding(6)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(AntigravityTheme.background)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+
+            if let output = tool.output {
+                Text(output)
+                    .font(.system(size: 11))
+                    .foregroundStyle(AntigravityTheme.textPrimary)
+                    .lineLimit(2)
             }
 
-            if tool.requiresApproval && tool.status == .pending {
+            if tool.requiresApproval {
                 HStack(spacing: 8) {
                     Button {
-                        withAnimation(AntigravityTheme.fluidSpring) {
-                            session.approveTool(tool.id)
-                        }
+                        session.approveTool(tool.id)
                     } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: "checkmark")
-                            Text(l10n.allowAction)
-                        }
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
-                        .background(AntigravityTheme.success)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        Text(l10n.approve)
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(AntigravityTheme.success)
+                            .clipShape(Capsule())
                     }
 
                     Button {
-                        withAnimation(AntigravityTheme.fluidSpring) {
-                            session.rejectTool(tool.id)
-                        }
+                        session.rejectTool(tool.id)
                     } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: "xmark")
-                            Text(l10n.rejectAction)
-                        }
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(AntigravityTheme.danger)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
-                        .background(AntigravityTheme.surfaceSecondary)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        Text(l10n.reject)
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(AntigravityTheme.danger)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(AntigravityTheme.danger.opacity(0.15))
+                            .clipShape(Capsule())
                     }
                 }
+                .padding(.top, 4)
             }
         }
         .padding(10)
-        .background(AntigravityTheme.surfaceSecondary)
+        .background(AntigravityTheme.surface)
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(AntigravityTheme.border, lineWidth: 1))
     }
 
-    private func statusPill(_ status: ToolStatus) -> some View {
-        Text(status == .success ? l10n.toolExecuted : (status == .pending ? l10n.toolPending : "Error"))
-            .font(.system(size: 10, weight: .bold))
-            .foregroundStyle(.white)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(status == .success ? AntigravityTheme.success : AntigravityTheme.warning)
-            .clipShape(Capsule())
-    }
-
-    private var streamingIndicator: some View {
-        HStack(spacing: 8) {
-            ProgressView()
-                .tint(AntigravityTheme.accent)
-            Text(l10n.agentThinking)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(AntigravityTheme.textSecondary)
+    private func statusBadge(_ status: ToolStatus) -> some View {
+        HStack(spacing: 4) {
+            Circle()
+                .fill(statusColor(status))
+                .frame(width: 6, height: 6)
+            Text(statusTitle(status))
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(statusColor(status))
         }
-        .padding(10)
-        .background(AntigravityTheme.surface)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 2)
+        .background(statusColor(status).opacity(0.15))
         .clipShape(Capsule())
     }
 
-    // MARK: - Quick Chips
-    private var quickActionsChips: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(["/goal Сделай билд", "/plan Архитектура", "Прогони тесты", "Покажи дифы"], id: \.self) { (chip: String) in
-                    Button {
-                        handlePromptSubmit(chip)
-                    } label: {
-                        Text(chip)
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(AntigravityTheme.textPrimary)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .background(AntigravityTheme.surfaceSecondary)
-                            .clipShape(Capsule())
-                            .overlay(Capsule().stroke(AntigravityTheme.border, lineWidth: 1))
-                    }
+    private func statusColor(_ status: ToolStatus) -> Color {
+        switch status {
+        case .pending: return AntigravityTheme.warning
+        case .running: return AntigravityTheme.accent
+        case .success: return AntigravityTheme.success
+        case .failed: return AntigravityTheme.danger
+        }
+    }
+
+    private func statusTitle(_ status: ToolStatus) -> String {
+        switch status {
+        case .pending: return l10n.pendingApproval
+        case .running: return "Выполняется"
+        case .success: return "Успех"
+        case .failed: return "Ошибка"
+        }
+    }
+
+    // MARK: - Streaming Indicator
+    private var streamingIndicator: some View {
+        HStack(spacing: 8) {
+            agentAvatar
+            HStack(spacing: 4) {
+                ForEach(0..<3) { i in
+                    Circle()
+                        .fill(AntigravityTheme.accent)
+                        .frame(width: 6, height: 6)
+                        .opacity(0.4)
                 }
+                Text("Antigravity выполняет задачу...")
+                    .font(.system(size: 12))
+                    .foregroundStyle(AntigravityTheme.textSecondary)
+                    .padding(.leading, 4)
             }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(AntigravityTheme.surface)
+            .clipShape(Capsule())
+            Spacer()
         }
     }
 
     // MARK: - Slash Commands Menu
     private var slashCommandsMenu: some View {
-        VStack(spacing: 0) {
-            ForEach(SlashCommand.availableCommands, id: \.command) { (cmd: SlashCommand) in
+        VStack(spacing: 4) {
+            ForEach(SlashCommand.commands) { slash in
                 Button {
-                    inputText = cmd.command + " "
-                    withAnimation(AntigravityTheme.snappySpring) {
-                        showSlashMenu = false
-                    }
+                    session.executeSlashCommand(slash)
+                    showSlashMenu = false
+                    inputText = ""
                 } label: {
-                    HStack(spacing: 12) {
-                        Image(systemName: cmd.icon)
-                            .font(.system(size: 14))
+                    HStack {
+                        Text(slash.command)
+                            .font(.system(size: 13, weight: .bold, design: .monospaced))
                             .foregroundStyle(AntigravityTheme.accent)
-                            .frame(width: 24)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(cmd.command)
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundStyle(AntigravityTheme.textPrimary)
-                            Text(cmd.description)
-                                .font(.system(size: 11))
-                                .foregroundStyle(AntigravityTheme.textSecondary)
-                                .lineLimit(1)
-                        }
+                        Text("— \(slash.description)")
+                            .font(.system(size: 12))
+                            .foregroundStyle(AntigravityTheme.textSecondary)
+                            .lineLimit(1)
                         Spacer()
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                 }
-                Divider().background(AntigravityTheme.border)
             }
         }
+        .padding(6)
         .background(AntigravityTheme.surface)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .overlay(RoundedRectangle(cornerRadius: 14).stroke(AntigravityTheme.border, lineWidth: 1))
-        .frame(maxHeight: 200)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).stroke(AntigravityTheme.border, lineWidth: 1))
+        .shadow(color: .black.opacity(0.3), radius: 10, y: -4)
+    }
+
+    // MARK: - Quick Actions Chips
+    private var quickActionsChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                chipButton("⚡️ Найти скиллы") {
+                    showSkills = true
+                }
+                chipButton("☁️ Проекты") {
+                    showProjects = true
+                }
+                chipButton("/goal Рефакторинг Swift 6") {
+                    handlePromptSubmit("/goal Оптимизируй архитектуру и исключи data race")
+                }
+                chipButton("📦 Собрать в облаке") {
+                    Task {
+                        _ = await projectManager.triggerCloudBuild(for: projectManager.activeProject)
+                    }
+                }
+            }
+        }
+    }
+
+    private func chipButton(_ title: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(AntigravityTheme.textPrimary)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(AntigravityTheme.surfaceSecondary)
+                .clipShape(Capsule())
+                .overlay(Capsule().stroke(AntigravityTheme.border, lineWidth: 1))
+        }
     }
 
     // MARK: - Input Bar
@@ -392,8 +479,8 @@ public struct ChatView: View {
                     showSlashMenu.toggle()
                 }
             } label: {
-                Image(systemName: "command")
-                    .font(.system(size: 15))
+                Image(systemName: "apple.terminal")
+                    .font(.system(size: 14))
                     .foregroundStyle(showSlashMenu ? AntigravityTheme.accent : AntigravityTheme.textSecondary)
                     .padding(8)
                     .background(AntigravityTheme.surfaceSecondary)
@@ -452,21 +539,20 @@ public struct ChatView: View {
     }
 
     private func handlePromptSubmit(_ prompt: String) {
-        if prompt.hasPrefix("/goal ") {
-            let task = String(prompt.dropFirst(6))
-            Task {
-                await agent.runAutonomousTask(
-                    goal: task,
-                    onMessage: { msg in
-                        session.messages.append(msg)
-                    },
-                    onArtifactCreated: { art in
-                        session.artifacts.append(art)
-                    }
-                )
-            }
-        } else {
-            session.sendMessage(prompt)
+        session.sendMessage(prompt)
+
+        Task {
+            await agent.runAutonomousTask(
+                goal: prompt,
+                skillsManager: skillManager,
+                activeProject: projectManager.activeProject,
+                onMessage: { msg in
+                    session.messages.append(msg)
+                },
+                onArtifactCreated: { art in
+                    session.artifacts.append(art)
+                }
+            )
         }
     }
 }

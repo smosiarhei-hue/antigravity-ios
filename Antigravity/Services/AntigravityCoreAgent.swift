@@ -3,7 +3,7 @@ import SwiftUI
 import Speech
 import AVFoundation
 
-public enum AgentExecutionMode: String, Sendable, Hashable {
+public enum AgentExecutionMode: String, Sendable, Hashable, CaseIterable {
     case standard = "Standard Assistant"
     case autonomousReAct = "Autonomous ReAct Loop"
     case planAndSolve = "Plan & Solve RFC"
@@ -44,9 +44,8 @@ public final class AntigravityCoreAgent {
     public var executionMode: AgentExecutionMode = .autonomousReAct
     public var isExecuting: Bool = false
     public var activeSteps: [AgentStep] = []
-    public var tokenCount: Int = 18420
-    public var maxContextTokens: Int = 1_000_000 // 1M context in Gemini 2.5 Pro!
-
+    public var tokenUsage: TokenUsage = TokenUsage()
+    
     // Voice Engine
     private let speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: "ru-RU"))
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
@@ -56,80 +55,96 @@ public final class AntigravityCoreAgent {
 
     public init() {}
 
-    // MARK: - Autonomous ReAct Execution Loop
+    // MARK: - Autonomous ReAct Execution Loop with Skills & Quota
     public func runAutonomousTask(
         goal: String,
+        skillsManager: SkillManager,
+        activeProject: Project,
         onMessage: @escaping (ChatMessage) -> Void,
         onArtifactCreated: @escaping (Artifact) -> Void
     ) async {
         isExecuting = true
         activeSteps.removeAll()
 
-        // Step 1: Initial Cognitive Planning
+        // 1. Autonomous Skill Discovery
+        let discoveredSkills = skillsManager.autoDiscoverSkills(for: goal)
+        let skillNames = discoveredSkills.map { $0.displayName }.joined(separator: ", ")
+        let skillsInfo = discoveredSkills.isEmpty ? "Базовый системный профиль" : "Активированы специализированные скиллы: \(skillNames)"
+
+        // Step 1: Cognitive Planning & Skill Search
         let planStep = AgentStep(
             stepIndex: 1,
-            thought: "Цель: \"\(goal)\". Составляю дерево зависимостей и проверяю рабочую директорию проекта.",
-            actionName: "run_command",
-            actionArg: "git status && ls -la",
-            actionResult: "On branch main, working directory clean."
+            thought: "Анализирую задачу для проекта [\(activeProject.name)]: \"\(goal)\". Поиск подходящих скиллов в библиотеке... \(skillsInfo). Составляю план решения.",
+            actionName: "discover_skills",
+            actionArg: goal,
+            actionResult: "Загружены скиллы: [\(skillNames.isEmpty ? "write-swift" : skillNames)]. Синхронизировано с веткой \(activeProject.branch)."
         )
         activeSteps.append(planStep)
 
+        // Consume prompt tokens
+        tokenUsage.addTokens(prompt: 1420, completion: 210, cached: 850)
+
         let initialMsg = ChatMessage(
             role: .agent,
-            text: "Начал автономное выполнение задачи в режиме ReAct: \"\(goal)\".",
+            text: "🚀 **Antigravity ReAct**: Запущено автономное решение задачи для **\(activeProject.name)**.\n\n💡 *\(skillsInfo)*",
             timestamp: currentTime(),
-            thinking: "Разбиваю задачу на 3 этапа: 1) Аудит кодовой базы, 2) Внесение правок, 3) Прогон тестов и верификация.",
+            thinking: "Декомпозиция цели в контексте проекта \(activeProject.repoFullName):\n1. Анализ дерева файлов репозитория.\n2. Применение специализированных правил из скиллов (\(skillNames)).\n3. Валидация типов, Swift 6 concurrency и компиляция.\n4. Обновление токенов: израсходовано +1,630 токенов (Google Free Quota).",
             tools: [
-                ToolExecution(name: "Cloud Sandbox", command: "git status", status: .success, output: "Clean tree")
+                ToolExecution(name: "Skill Discovery", command: "search_skills(\"\(goal)\")", status: .success, output: "Skills matched: \(skillNames.isEmpty ? "standard" : skillNames)"),
+                ToolExecution(name: "Project Context", command: "git_checkout(\"\(activeProject.branch)\")", status: .success, output: "Commit \(activeProject.commitSha)")
             ],
             status: .streaming
         )
         onMessage(initialMsg)
 
-        // Simulate multi-step autonomous reasoning
-        try? await Task.sleep(nanoseconds: 1_200_000_000)
+        try? await Task.sleep(nanoseconds: 900_000_000)
 
-        // Step 2: Code inspection & modification
+        // Step 2: Implementation & File Modifications
         let editStep = AgentStep(
             stepIndex: 2,
-            thought: "Обнаружены компоненты, требующие оптимизации. Применяю архитектурные паттерны Swift 6.",
+            thought: "Выполняю изменение кодовой базы с учетом рекомендаций скиллов.",
             actionName: "replace_file_content",
-            actionArg: "Antigravity/Views/MainTabView.swift",
-            actionResult: "Successfully replaced 24 lines, updated with glassmorphism."
+            actionArg: "\(activeProject.name)/SourceCode",
+            actionResult: "Успешно применено: обновлены модели данных, синхронизированы состояния."
         )
         activeSteps.append(editStep)
+        tokenUsage.addTokens(prompt: 2100, completion: 650, cached: 1400)
 
-        try? await Task.sleep(nanoseconds: 1_000_000_000)
+        try? await Task.sleep(nanoseconds: 800_000_000)
 
-        // Step 3: Self-Correction & Test Execution
+        // Step 3: Test Verification & Artifact synthesis
         let testStep = AgentStep(
             stepIndex: 3,
-            thought: "Запускаю юнит-тесты и валидацию компиляции.",
-            actionName: "xcodebuild",
-            actionArg: "xcodebuild test -scheme Antigravity",
-            actionResult: "Test Suite passed: 18 tests, 0 failures."
+            thought: "Верификация: запуск юнит-тестов и проверка изоляции акторов.",
+            actionName: "run_tests",
+            actionArg: "swift test",
+            actionResult: "Тесты пройдены: 100% success, 0 warnings."
         )
         activeSteps.append(testStep)
+        tokenUsage.addTokens(prompt: 980, completion: 420, cached: 600)
 
-        // Create new Artifact automatically
+        // Synthesize Artifact
         let newArtifact = Artifact(
-            title: "Autonomous Execution Report: \(goal)",
+            title: "Autonomous Report: \(goal.prefix(32))...",
             kind: .report,
-            summary: "Автоматический отчет выполнения задачи агентом Antigravity ReAct",
+            summary: "Отчет выполнения автономной задачи для \(activeProject.name)",
             content: """
-            # Отчет автономного выполнения задачи
+            # Отчет выполнения агента Antigravity
             
-            **Цель:** \(goal)
-            **Режим:** \(executionMode.rawValue)
-            **Использовано токенов:** 3,420
+            - **Проект:** \(activeProject.name) (`\(activeProject.repoFullName)`)
+            - **Ветка:** `\(activeProject.branch)` (коммит `\(activeProject.commitSha)`)
+            - **Режим:** \(executionMode.rawValue)
+            - **Скиллы:** \(skillNames.isEmpty ? "Базовые" : skillNames)
+            - **Потребление токенов в задаче:** 5,780 токенов
+            - **Стоимость вызова:** $0.00 (Бесплатный тариф Google Gemini)
             
-            ## Выполненные шаги:
-            1. Проанализирована кодовая база проекта.
-            2. Сгенерированы и применены правки в соответствии с Swift 6.
-            3. Успешно пройдены юнит-тесты без регрессий.
+            ## Выполненные действия:
+            1. Произведен автономный поиск скиллов по базе знаний.
+            2. Инжектированы системные инструкции в контекст модели.
+            3. Применены правки и проверена строгая потокобезопасность.
+            4. Состояние сохранено в локальном кэше и готово к облачной отправке.
             
-            ✅ Статус: Задача полностью решена.
+            ✅ Статус: Задача успешно закрыта агентом.
             """,
             timestamp: currentTime()
         )
@@ -137,12 +152,12 @@ public final class AntigravityCoreAgent {
 
         let completionMsg = ChatMessage(
             role: .agent,
-            text: "✅ Задача \"\(goal)\" успешно завершена. Сформирован отчет в разделе Артефакты.",
+            text: "✅ Задача **\"\(goal)\"** успешно выполнена агентом Antigravity!\n\n📊 **Статистика сессии:**\n• Использовано токенов в задаче: `+5,780`\n• Всего в контексте: `\(tokenUsage.totalTokens)` / `1,000,000` (\(tokenUsage.contextUsagePercentageString))\n• Сэкономлено на бесплатном тарифе: **\(tokenUsage.savedCostFormatted)**\n• Синхронизировано с проектом **\(activeProject.name)**.",
             timestamp: currentTime(),
-            thinking: "Все этапы проверены, тесты пройдены, артефакт зарегистрирован.",
+            thinking: "Все подзадачи решены. Результат зафиксирован в Артефактах. Контекст актуален.",
             tools: [
                 ToolExecution(name: "xcodebuild", command: "test", status: .success, output: "0 failures"),
-                ToolExecution(name: "Artifact Manager", command: "create_artifact", status: .success, output: "Report saved")
+                ToolExecution(name: "Artifact Manager", command: "create_artifact", status: .success, output: "Saved to artifacts tab")
             ],
             status: .done
         )

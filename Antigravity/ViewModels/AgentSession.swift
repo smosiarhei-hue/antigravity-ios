@@ -10,6 +10,10 @@ public final class AgentSession {
     public var mcpServers: [MCPServerInfo] = []
     public var fileDiffs: [FileDiff] = []
     
+    // Multi-Session Chat History
+    public var chatSessions: [ChatSession] = ChatSession.sampleSessions
+    public var activeSessionId: String = "session-1"
+
     public var isStreaming: Bool = false
     public var activeModel: String = "Gemini 2.5 Pro (High)"
     public var availableModels: [String] = [
@@ -84,7 +88,7 @@ public final class AgentSession {
         self.messages = [
             ChatMessage(
                 role: .system,
-                text: "Сессия Antigravity активирована. Подключено облачное микро-окружение Firecracker. Авторизован аккаунт Google: Siarhei Smazhankoy.",
+                text: "Сессия Antigravity активирована. Подключено облачное окружение Firecracker. Авторизован аккаунт Google: Siarhei Smazhankoy.",
                 timestamp: "03:10"
             ),
             ChatMessage(
@@ -94,65 +98,102 @@ public final class AgentSession {
             ),
             ChatMessage(
                 role: .agent,
-                text: "Спроектировал и развернул нативный проект Antigravity iOS. Подключил систему артефактов, хаб субагентов, инспекцию MCP-серверов и слэш-команды (`/goal`, `/plan`, `/boost`). Сейчас настраиваю XcodeGen и сборку подписанного IPA с отправкой в Telegram-бот.",
+                text: "Спроектировал и развернул нативный проект Antigravity iOS. Подключил систему артефактов, хаб субагентов, инспекцию MCP-серверов и слэш-команды (`/goal`, `/plan`, `/boost`). Настроена автоматическая сборка подписанного IPA с отправкой в Telegram-бот и OTA-установкой.",
                 timestamp: "03:12",
                 thinking: """
                 1. Проверен baseline: Swift 6.0, XcodeGen project.yml.
-                2. Интегрирован GoogleAuthManager для входа через единый Google ID.
-                3. Настроен пайплайн сборки с секретами Apple Certificate и автоматической доставкой IPA через Telegram бота.
-                4. Встроены компоненты интерактивных разрешений вызовов тулзов (Human-in-the-Loop).
+                2. Развернуты все сущности: ChatMessage, ToolExecution, FileDiff, SlashCommand, Artifact, Subagent.
+                3. Добавлена авторизация через Google OAuth 2.0 (ASWebAuthenticationSession).
+                4. Настроен GitHub Actions workflow для компиляции и кодоподписи с сертификатом разработчика.
                 """,
                 tools: [
                     ToolExecution(
                         name: "XcodeGen",
                         command: "xcodegen generate",
                         status: .success,
-                        output: "Generated Antigravity.xcodeproj with 1 target."
+                        output: "Saved project to Antigravity.xcodeproj"
                     ),
                     ToolExecution(
-                        name: "Cloud Sandbox Bash",
-                        command: "git status",
+                        name: "Git",
+                        command: "git add . && git commit -m 'Initial project baseline'",
                         status: .success,
-                        output: "Branch main, clean working tree."
-                    ),
-                    ToolExecution(
-                        name: "Code Sign Check",
-                        command: "python3 .github/scripts/patch_project_signing.py",
-                        status: .pending,
-                        requiresApproval: true
-                    ),
+                        output: "Committed 24 files to main branch"
+                    )
                 ]
             )
         ]
     }
 
+    // MARK: - Multi-Session History Management
+    public func createNewSession(title: String = "Новая задача", projectId: String = "antigravity-ios", projectName: String = "Antigravity iOS") {
+        let newSession = ChatSession(
+            id: UUID().uuidString,
+            title: title,
+            projectId: projectId,
+            projectName: projectName,
+            previewText: "Диалог начат...",
+            timestamp: currentTimeString(),
+            tokensUsed: 0,
+            activeSkillNames: ["apple-design", "write-swift"],
+            messages: [
+                ChatMessage(
+                    role: .system,
+                    text: "Новая сессия инициализирована для проекта [\(projectName)]. Облачные агенты и скиллы готовы к работе.",
+                    timestamp: currentTimeString()
+                )
+            ]
+        )
+        chatSessions.insert(newSession, at: 0)
+        switchSession(to: newSession.id)
+    }
+
+    public func switchSession(to sessionId: String) {
+        guard let target = chatSessions.first(where: { $0.id == sessionId }) else { return }
+        
+        // Save current session messages before switching
+        if let currentIdx = chatSessions.firstIndex(where: { $0.id == activeSessionId }) {
+            chatSessions[currentIdx].messages = self.messages
+            chatSessions[currentIdx].tokensUsed = self.messages.count * 820
+            if let lastText = self.messages.last?.text {
+                chatSessions[currentIdx].previewText = String(lastText.prefix(60)) + "..."
+            }
+        }
+
+        self.activeSessionId = sessionId
+        if !target.messages.isEmpty {
+            self.messages = target.messages
+        } else {
+            self.messages = [
+                ChatMessage(
+                    role: .system,
+                    text: "Сессия [\(target.title)] загружена из локального хранилища.",
+                    timestamp: currentTimeString()
+                )
+            ]
+        }
+    }
+
+    public func deleteSession(_ sessionId: String) {
+        chatSessions.removeAll { $0.id == sessionId }
+        if activeSessionId == sessionId, let first = chatSessions.first {
+            switchSession(to: first.id)
+        }
+    }
+
     public func sendMessage(_ text: String) {
+        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        
         let userMessage = ChatMessage(
             role: .user,
             text: text,
             timestamp: currentTimeString()
         )
         messages.append(userMessage)
-
-        // Simulate agent processing
-        isStreaming = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-            let response = ChatMessage(
-                role: .agent,
-                text: "Принял команду: \"\(text)\". Выполняю в облачной песочнице...",
-                timestamp: self.currentTimeString(),
-                thinking: "Анализ запроса: планирую шаги выполнения в песочнице...",
-                tools: [
-                    ToolExecution(
-                        name: "Bash",
-                        command: "echo '\(text)'",
-                        status: .success,
-                        output: "Task dispatched to Cloud Sandbox"
-                    )
-                ]
-            )
-            self.messages.append(response)
-            self.isStreaming = false
+        
+        // Update session preview
+        if let idx = chatSessions.firstIndex(where: { $0.id == activeSessionId }) {
+            chatSessions[idx].previewText = String(text.prefix(60))
+            chatSessions[idx].timestamp = currentTimeString()
         }
     }
 

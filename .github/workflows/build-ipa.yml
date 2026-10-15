@@ -30,9 +30,9 @@ jobs:
       - name: Compute version
         run: |
           RUN=${{ github.run_number }}
-          echo "MARKETING_VERSION=1.0.$RUN" >> "$GITHUB_ENV"
-          echo "BUILD_NUMBER=$RUN" >> "$GITHUB_ENV"
-          echo "BUNDLE_ID=com.smoze.antigravity" >> "$GITHUB_ENV"
+          echo "MARKETING_VERSION=2.0.$RUN" >> "$GITHUB_ENV"
+          echo "BUILD_NUMBER=$((2000 + RUN))" >> "$GITHUB_ENV"
+          echo "BUNDLE_ID=app.hare5681.lyra4838" >> "$GITHUB_ENV"
 
       - name: Check for Apple Certificate Secrets
         id: cert_check
@@ -167,6 +167,11 @@ jobs:
 
             security cms -D -i "$PROV_FILE" > "$RUNNER_TEMP/profile.plist"
             /usr/libexec/PlistBuddy -x -c 'Print :Entitlements' "$RUNNER_TEMP/profile.plist" > "$RUNNER_TEMP/entitlements.plist"
+
+            echo "==> Ensuring Info.plist has CFBundleDisplayName and correct versions..."
+            /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName Antigravity" "$APP/Info.plist" || /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string Antigravity" "$APP/Info.plist" || true
+            /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $MARKETING_VERSION" "$APP/Info.plist" || /usr/libexec/PlistBuddy -c "Add :CFBundleShortVersionString string $MARKETING_VERSION" "$APP/Info.plist" || true
+            /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$APP/Info.plist" || /usr/libexec/PlistBuddy -c "Add :CFBundleVersion string $BUILD_NUMBER" "$APP/Info.plist" || true
 
             security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
