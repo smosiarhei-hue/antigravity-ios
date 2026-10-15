@@ -2,6 +2,7 @@ import SwiftUI
 
 public struct DiffView: View {
     @Environment(AgentSession.self) private var session
+    @Environment(LocalizationManager.self) private var l10n
     @State private var selectedFileId: String = ""
     @State private var commitMessage: String = "feat: update Antigravity iOS architecture and models"
 
@@ -21,7 +22,7 @@ public struct DiffView: View {
                     commitBar
                 }
             }
-            .navigationTitle("Изменения кода")
+            .navigationTitle(l10n.diffsTitle)
             .onAppear {
                 if selectedFileId.isEmpty, let first = session.fileDiffs.first {
                     selectedFileId = first.id
@@ -37,7 +38,7 @@ public struct DiffView: View {
     private var filePickerChips: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                ForEach(session.fileDiffs) { file in
+                ForEach(session.fileDiffs, id: \.id) { file in
                     let isSelected = file.id == selectedFileId
                     Button {
                         selectedFileId = file.id

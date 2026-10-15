@@ -1,43 +1,44 @@
 import SwiftUI
 
 public struct MainTabView: View {
+    @Environment(LocalizationManager.self) private var l10n
     @State private var selectedTab: Int = 0
 
     public var body: some View {
         TabView(selection: $selectedTab) {
             ChatView()
                 .tabItem {
-                    Label("Чат", systemImage: "bubble.left.and.bubble.right.fill")
+                    Label(l10n.tabChat, systemImage: "bubble.left.and.bubble.right.fill")
                 }
                 .tag(0)
 
             ArtifactsView()
                 .tabItem {
-                    Label("Артефакты", systemImage: "doc.text.image.fill")
+                    Label(l10n.tabArtifacts, systemImage: "doc.text.image.fill")
                 }
                 .tag(1)
 
             SubagentsView()
                 .tabItem {
-                    Label("Субагенты", systemImage: "person.3.sequence.fill")
+                    Label(l10n.tabSubagents, systemImage: "person.3.sequence.fill")
                 }
                 .tag(2)
 
             LivePreviewView()
                 .tabItem {
-                    Label("Превью", systemImage: "globe")
+                    Label(l10n.tabPreview, systemImage: "globe")
                 }
                 .tag(3)
 
             DiffView()
                 .tabItem {
-                    Label("Дифы", systemImage: "arrow.triangle.pull")
+                    Label(l10n.tabDiffs, systemImage: "arrow.triangle.pull")
                 }
                 .tag(4)
 
             SettingsView()
                 .tabItem {
-                    Label("Настройки", systemImage: "gearshape.fill")
+                    Label(l10n.tabSettings, systemImage: "gearshape.fill")
                 }
                 .tag(5)
         }

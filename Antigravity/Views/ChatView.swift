@@ -3,10 +3,12 @@ import SwiftUI
 public struct ChatView: View {
     @Environment(AgentSession.self) private var session
     @Environment(GoogleAuthManager.self) private var auth
+    @Environment(LocalizationManager.self) private var l10n
+    @Environment(AntigravityCoreAgent.self) private var agent
+    
     @State private var inputText: String = ""
     @State private var expandedThinking: Set<String> = []
     @State private var showSlashMenu: Bool = false
-    @State private var isListeningVoice: Bool = false
 
     public var body: some View {
         NavigationStack {
@@ -21,12 +23,12 @@ public struct ChatView: View {
                     ScrollViewReader { proxy in
                         ScrollView {
                             LazyVStack(spacing: 16) {
-                                ForEach(session.messages) { message in
+                                ForEach(session.messages, id: \.id) { message in
                                     messageRow(message)
                                         .id(message.id)
                                 }
 
-                                if session.isStreaming {
+                                if session.isStreaming || agent.isExecuting {
                                     streamingIndicator
                                 }
                             }
@@ -69,7 +71,7 @@ public struct ChatView: View {
                     HStack(spacing: 8) {
                         Image(systemName: "sparkles")
                             .foregroundStyle(AntigravityTheme.accent)
-                        Text("Antigravity")
+                        Text(l10n.appTitle)
                             .font(.system(size: 17, weight: .bold))
                             .foregroundStyle(AntigravityTheme.textPrimary)
                     }
@@ -94,7 +96,7 @@ public struct ChatView: View {
                 Image(systemName: "cloud.fill")
                     .font(.system(size: 11))
                     .foregroundStyle(AntigravityTheme.accent)
-                Text("Cloud MicroVM")
+                Text(agent.executionMode.rawValue)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(AntigravityTheme.textSecondary)
             }
@@ -118,12 +120,10 @@ public struct ChatView: View {
             }
 
             VStack(alignment: message.role == .user ? .trailing : .leading, spacing: 8) {
-                // Collapsible Thinking Drawer
                 if let thinking = message.thinking {
                     thinkingBox(messageId: message.id, content: thinking)
                 }
 
-                // Main Message Bubble
                 Text(message.text)
                     .font(.system(size: 15))
                     .foregroundStyle(message.role == .user ? .white : AntigravityTheme.textPrimary)
@@ -140,10 +140,9 @@ public struct ChatView: View {
                             .stroke(message.role == .user ? .clear : AntigravityTheme.border, lineWidth: 1)
                     )
 
-                // Tool Execution Cards
                 if !message.tools.isEmpty {
                     VStack(spacing: 8) {
-                        ForEach(message.tools) { tool in
+                        ForEach(message.tools, id: \.id) { tool in
                             toolCard(tool)
                         }
                     }
@@ -201,7 +200,7 @@ public struct ChatView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "brain.head.profile")
                         .foregroundStyle(AntigravityTheme.accentPurple)
-                    Text("Рассуждения модели")
+                    Text(l10n.thinkingTitle)
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(AntigravityTheme.accentPurple)
                     Spacer()
@@ -267,7 +266,7 @@ public struct ChatView: View {
                     } label: {
                         HStack(spacing: 4) {
                             Image(systemName: "checkmark")
-                            Text("Разрешить")
+                            Text(l10n.allowAction)
                         }
                         .font(.system(size: 12, weight: .bold))
                         .foregroundStyle(.white)
@@ -284,7 +283,7 @@ public struct ChatView: View {
                     } label: {
                         HStack(spacing: 4) {
                             Image(systemName: "xmark")
-                            Text("Отклонить")
+                            Text(l10n.rejectAction)
                         }
                         .font(.system(size: 12, weight: .bold))
                         .foregroundStyle(AntigravityTheme.danger)
@@ -303,7 +302,7 @@ public struct ChatView: View {
     }
 
     private func statusPill(_ status: ToolStatus) -> some View {
-        Text(status == .success ? "Выполнено" : (status == .pending ? "Одобрение" : "Ошибка"))
+        Text(status == .success ? l10n.toolExecuted : (status == .pending ? l10n.toolPending : "Error"))
             .font(.system(size: 10, weight: .bold))
             .foregroundStyle(.white)
             .padding(.horizontal, 6)
@@ -316,7 +315,7 @@ public struct ChatView: View {
         HStack(spacing: 8) {
             ProgressView()
                 .tint(AntigravityTheme.accent)
-            Text("Antigravity думает...")
+            Text(l10n.agentThinking)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(AntigravityTheme.textSecondary)
         }
@@ -329,9 +328,9 @@ public struct ChatView: View {
     private var quickActionsChips: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                ForEach(["/goal Сделай билд", "/plan Архитектура", "Прогони тесты", "Покажи дифы"], id: \.self) { chip in
+                ForEach(["/goal Сделай билд", "/plan Архитектура", "Прогони тесты", "Покажи дифы"], id: \.self) { (chip: String) in
                     Button {
-                        session.sendMessage(chip)
+                        handlePromptSubmit(chip)
                     } label: {
                         Text(chip)
                             .font(.system(size: 12, weight: .medium))
@@ -350,7 +349,7 @@ public struct ChatView: View {
     // MARK: - Slash Commands Menu
     private var slashCommandsMenu: some View {
         VStack(spacing: 0) {
-            ForEach(SlashCommand.availableCommands) { cmd in
+            ForEach(SlashCommand.availableCommands, id: \.command) { (cmd: SlashCommand) in
                 Button {
                     inputText = cmd.command + " "
                     withAnimation(AntigravityTheme.snappySpring) {
@@ -388,7 +387,6 @@ public struct ChatView: View {
     // MARK: - Input Bar
     private var inputBar: some View {
         HStack(spacing: 8) {
-            // Slash button
             Button {
                 withAnimation(AntigravityTheme.snappySpring) {
                     showSlashMenu.toggle()
@@ -402,8 +400,7 @@ public struct ChatView: View {
                     .clipShape(Circle())
             }
 
-            // Text input
-            TextField("Спросите Antigravity или введите /", text: $inputText)
+            TextField(l10n.chatPlaceholder, text: $inputText)
                 .font(.system(size: 14))
                 .foregroundStyle(AntigravityTheme.textPrimary)
                 .padding(.horizontal, 12)
@@ -419,26 +416,27 @@ public struct ChatView: View {
                     }
                 }
 
-            // Voice dictation button
             Button {
-                isListeningVoice.toggle()
-                if isListeningVoice {
-                    inputText = "Проверь сборку проекта и запусти тесты"
+                if agent.isRecordingVoice {
+                    agent.stopVoiceTranscription()
+                } else {
+                    agent.startVoiceTranscription { transcription in
+                        self.inputText = transcription
+                    }
                 }
             } label: {
-                Image(systemName: isListeningVoice ? "waveform" : "mic.fill")
+                Image(systemName: agent.isRecordingVoice ? "waveform" : "mic.fill")
                     .font(.system(size: 14))
-                    .foregroundStyle(isListeningVoice ? AntigravityTheme.danger : AntigravityTheme.textSecondary)
+                    .foregroundStyle(agent.isRecordingVoice ? AntigravityTheme.danger : AntigravityTheme.textSecondary)
                     .padding(8)
                     .background(AntigravityTheme.surfaceSecondary)
                     .clipShape(Circle())
             }
 
-            // Send button
             Button {
                 let trimmed = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !trimmed.isEmpty else { return }
-                session.sendMessage(trimmed)
+                handlePromptSubmit(trimmed)
                 inputText = ""
                 showSlashMenu = false
             } label: {
@@ -450,6 +448,25 @@ public struct ChatView: View {
                     .clipShape(Circle())
             }
             .disabled(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        }
+    }
+
+    private func handlePromptSubmit(_ prompt: String) {
+        if prompt.hasPrefix("/goal ") {
+            let task = String(prompt.dropFirst(6))
+            Task {
+                await agent.runAutonomousTask(
+                    goal: task,
+                    onMessage: { msg in
+                        session.messages.append(msg)
+                    },
+                    onArtifactCreated: { art in
+                        session.artifacts.append(art)
+                    }
+                )
+            }
+        } else {
+            session.sendMessage(prompt)
         }
     }
 }

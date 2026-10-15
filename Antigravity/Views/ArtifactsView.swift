@@ -2,6 +2,7 @@ import SwiftUI
 
 public struct ArtifactsView: View {
     @Environment(AgentSession.self) private var session
+    @Environment(LocalizationManager.self) private var l10n
     @State private var selectedArtifact: Artifact?
 
     public var body: some View {
@@ -11,7 +12,7 @@ public struct ArtifactsView: View {
 
                 ScrollView {
                     LazyVStack(spacing: 12) {
-                        ForEach(session.artifacts) { artifact in
+                        ForEach(session.artifacts, id: \.id) { artifact in
                             artifactCard(artifact)
                                 .onTapGesture {
                                     selectedArtifact = artifact
@@ -21,7 +22,7 @@ public struct ArtifactsView: View {
                     .padding(16)
                 }
             }
-            .navigationTitle("Артефакты")
+            .navigationTitle(l10n.artifactsTitle)
             .sheet(item: $selectedArtifact) { artifact in
                 ArtifactDetailSheet(artifact: artifact)
             }

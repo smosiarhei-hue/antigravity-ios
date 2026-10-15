@@ -2,6 +2,7 @@ import SwiftUI
 
 public struct SubagentsView: View {
     @Environment(AgentSession.self) private var session
+    @Environment(LocalizationManager.self) private var l10n
     @State private var showingNewSubagentAlert: Bool = false
     @State private var newSubagentRole: String = ""
 
@@ -16,14 +17,14 @@ public struct SubagentsView: View {
                         overviewCard
 
                         // Active Subagents List
-                        ForEach(session.subagents) { subagent in
+                        ForEach(session.subagents, id: \.id) { subagent in
                             subagentCard(subagent)
                         }
                     }
                     .padding(16)
                 }
             }
-            .navigationTitle("Субагенты")
+            .navigationTitle(l10n.subagentsTitle)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {

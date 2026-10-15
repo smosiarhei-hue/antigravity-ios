@@ -17,8 +17,8 @@ public enum AntigravityTheme {
     public static let textSecondary = Color(red: 0.55, green: 0.58, blue: 0.62) // #8b949e
     public static let textTertiary = Color(red: 0.43, green: 0.46, blue: 0.51)  // #6e7681
 
-    // MARK: - Fluid Springs (Apple Design)
-    public static let fluidSpring = Animation.spring(response: 0.36, dampingRatio: 0.82)
-    public static let snappySpring = Animation.spring(response: 0.28, dampingRatio: 0.75)
-    public static let gentleSpring = Animation.spring(response: 0.48, dampingRatio: 0.88)
+    // MARK: - Fluid Springs (Apple Design WWDC)
+    public static let fluidSpring = Animation.snappy(duration: 0.35)
+    public static let snappySpring = Animation.snappy(duration: 0.25, extraBounce: 0.08)
+    public static let gentleSpring = Animation.smooth(duration: 0.45)
 }
