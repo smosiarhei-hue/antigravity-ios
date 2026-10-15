@@ -46,20 +46,20 @@ def generate_manifest(bundle_id: str, version: str, ipa_url: str, title: str = "
 
 def generate_html(owner: str, repo_name: str, version: str, build_num: str) -> str:
     ota_url = f"itms-services://?action=download-manifest&url=https://{owner}.github.io/{repo_name}/manifest.plist"
-    direct_ipa = f"https://github.com/{owner}/{repo_name}/releases/latest/download/Antigravity.ipa"
+    direct_ipa = f"https://{owner}.github.io/{repo_name}/Antigravity.ipa"
 
     return f"""<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Antigravity iOS — Автономный AI-агент кодинга</title>
+    <title>Antigravity iOS — Установка на iPhone</title>
     <link rel="icon" type="image/png" href="AppIcon.png">
     <style>
         :root {{
             --bg: #090a0f;
-            --card-bg: rgba(22, 27, 34, 0.7);
-            --card-border: rgba(255, 255, 255, 0.1);
+            --card-bg: rgba(22, 27, 34, 0.75);
+            --card-border: rgba(255, 255, 255, 0.12);
             --accent-blue: #58a6ff;
             --accent-purple: #a371f7;
             --accent-green: #3fb950;
@@ -84,35 +84,35 @@ def generate_html(owner: str, repo_name: str, version: str, build_num: str) -> s
             padding: 32px 16px;
         }}
         .container {{
-            max-width: 480px;
+            max-width: 460px;
             width: 100%;
             background: var(--card-bg);
             border: 1px solid var(--card-border);
             backdrop-filter: blur(40px);
             -webkit-backdrop-filter: blur(40px);
             border-radius: 36px;
-            padding: 40px 24px;
+            padding: 36px 24px;
             text-align: center;
-            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7), 0 0 40px rgba(88, 166, 255, 0.1);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7), 0 0 40px rgba(88, 166, 255, 0.15);
             position: relative;
             overflow: hidden;
         }}
         .icon-wrap {{
             position: relative;
-            width: 120px;
-            height: 120px;
-            margin: 0 auto 20px;
+            width: 112px;
+            height: 112px;
+            margin: 0 auto 18px;
         }}
         .app-icon {{
-            width: 120px;
-            height: 120px;
-            border-radius: 28px;
-            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 24px rgba(88, 166, 255, 0.35);
+            width: 112px;
+            height: 112px;
+            border-radius: 26px;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 24px rgba(88, 166, 255, 0.4);
             display: block;
-            border: 1px solid rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }}
         h1 {{
-            font-size: 32px;
+            font-size: 30px;
             font-weight: 800;
             letter-spacing: -0.6px;
             margin-bottom: 6px;
@@ -123,32 +123,21 @@ def generate_html(owner: str, repo_name: str, version: str, build_num: str) -> s
         .subtitle {{
             font-size: 14px;
             color: var(--text-secondary);
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             line-height: 1.4;
-        }}
-        .badges {{
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 28px;
-            flex-wrap: wrap;
         }}
         .badge {{
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-            padding: 5px 12px;
+            gap: 6px;
+            padding: 6px 14px;
             border-radius: 20px;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 600;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: var(--text-primary);
-        }}
-        .badge-signed {{
             background: rgba(63, 185, 80, 0.15);
-            border-color: rgba(63, 185, 80, 0.4);
+            border: 1px solid rgba(63, 185, 80, 0.4);
             color: #3fb950;
+            margin-bottom: 24px;
         }}
         .btn-install {{
             display: block;
@@ -160,8 +149,8 @@ def generate_html(owner: str, repo_name: str, version: str, build_num: str) -> s
             text-decoration: none;
             padding: 16px 24px;
             border-radius: 18px;
-            box-shadow: 0 8px 24px rgba(31, 111, 235, 0.4);
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            box-shadow: 0 8px 24px rgba(31, 111, 235, 0.45);
+            transition: transform 0.15s ease;
             margin-bottom: 12px;
         }}
         .btn-install:active {{
@@ -178,65 +167,20 @@ def generate_html(owner: str, repo_name: str, version: str, build_num: str) -> s
             text-decoration: none;
             padding: 12px;
             border-radius: 14px;
-            margin-bottom: 28px;
-        }}
-        .features {{
-            text-align: left;
-            background: rgba(0, 0, 0, 0.25);
-            border-radius: 20px;
-            padding: 16px;
             margin-bottom: 24px;
+        }}
+        .tip {{
+            margin-top: 14px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 14px;
+            padding: 12px;
             border: 1px solid rgba(255, 255, 255, 0.05);
         }}
-        .feature-item {{
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-        }}
-        .feature-item:last-child {{
-            border-bottom: none;
-        }}
-        .feature-icon {{
-            font-size: 18px;
-            line-height: 1;
-            margin-top: 2px;
-        }}
-        .feature-text h4 {{
-            font-size: 13px;
-            font-weight: 600;
-            color: #f0f6fc;
-        }}
-        .feature-text p {{
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-top: 2px;
-        }}
-        .guide {{
-            text-align: left;
-            background: rgba(88, 166, 255, 0.05);
-            border: 1px solid rgba(88, 166, 255, 0.15);
-            border-radius: 16px;
-            padding: 14px;
-        }}
-        .guide-title {{
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--accent-blue);
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }}
-        .guide ol {{
-            padding-left: 18px;
-            font-size: 11px;
-            color: var(--text-secondary);
-            line-height: 1.6;
-        }}
         .footer {{
-            margin-top: 24px;
+            margin-top: 20px;
             font-size: 11px;
             color: rgba(255, 255, 255, 0.3);
         }}
@@ -251,65 +195,39 @@ def generate_html(owner: str, repo_name: str, version: str, build_num: str) -> s
         <h1>Antigravity</h1>
         <p class="subtitle">Автономный AI-агент для iOS на базе Swift 6 и Gemini 2.5 Pro</p>
 
-        <div class="badges">
-            <span class="badge badge-signed">✓ Подписанный сертификат</span>
-            <span class="badge">v{version} (билд #{build_num})</span>
-            <span class="badge">SwiftUI 6.0</span>
+        <div class="badge">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3fb950;"></span>
+            Подписано сертификатом разработчика
         </div>
 
-        <a href="{ota_url}" class="btn-install">
-            📲 Установить на iPhone
+        <a id="installBtn" href="{ota_url}" class="btn-install">
+            📲 Установить обновление на iPhone
         </a>
 
         <a href="{direct_ipa}" class="btn-secondary">
-            ⬇️ Скачать файл Antigravity.ipa
+            ⬇️ Скачать прямой файл .ipa
         </a>
 
-        <div class="features">
-            <div class="feature-item">
-                <span class="feature-icon">⚡</span>
-                <div class="feature-text">
-                    <h4>Автономный ReAct движок</h4>
-                    <p>Многоэтапное планирование, выполнение bash-команд и самокоррекция.</p>
-                </div>
-            </div>
-            <div class="feature-item">
-                <span class="feature-icon">🔑</span>
-                <div class="feature-text">
-                    <h4>Google Авторизация & Gemini 2.5</h4>
-                    <p>Контекстное окно до 1 млн токенов и доступ к квотам Google Cloud.</p>
-                </div>
-            </div>
-            <div class="feature-item">
-                <span class="feature-icon">🌐</span>
-                <div class="feature-text">
-                    <h4>Live Web Preview</h4>
-                    <p>Встроенный браузер для мгновенного теста dev-серверов (:3000, :5173).</p>
-                </div>
-            </div>
-            <div class="feature-item">
-                <span class="feature-icon">🎙️</span>
-                <div class="feature-text">
-                    <h4>Голосовой ввод Apple Speech</h4>
-                    <p>Надиктовывайте ТЗ голосом с мгновенной транскрипцией на устройстве.</p>
-                </div>
-            </div>
+        <div class="tip">
+            После открытия ссылки Safari покажет системное окно iOS:<br>
+            <b>«{owner}.github.io собирается установить "Antigravity"»</b>.<br>
+            Нажмите <b>«Установить»</b> — и приложение моментально появится на домашнем экране.
         </div>
 
-        <div class="guide">
-            <div class="guide-title">
-                ℹ️ Как установить на iPhone:
-            </div>
-            <ol>
-                <li>Откройте эту страницу в <b>Safari</b> на вашем iPhone.</li>
-                <li>Нажмите синюю кнопку <b>«Установить на iPhone»</b>.</li>
-                <li>Подтвердите всплывающее окно iOS <i>«Установить "Antigravity"?»</i>.</li>
-                <li>Если запускаете впервые: перейдите в <b>Настройки ➔ Основные ➔ VPN и управление устройством</b> и нажмите <i>«Доверять»</i>.</li>
-            </ol>
-        </div>
-
-        <p class="footer">Antigravity Cloud • DeepMind & Community</p>
+        <p class="footer">Antigravity Cloud • Версия {version} (билд #{build_num})</p>
     </div>
+
+    <script>
+        // Автоматический вызов установки на iOS при открытии ссылки
+        function autoTriggerInstall() {
+            if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+                window.location.href = "{ota_url}";
+            }
+        }
+        window.addEventListener("DOMContentLoaded", () => {
+            setTimeout(autoTriggerInstall, 350);
+        });
+    </script>
 </body>
 </html>"""
 
@@ -320,48 +238,77 @@ def deploy(env=None):
 
     token = env.get("GH_PAGES_TOKEN", "").strip()
     repository = env.get("GITHUB_REPOSITORY", "").strip()
-    bundle_id = env.get("BUNDLE_ID", "com.smoze.antigravity").strip()
+    bundle_id = env.get("BUNDLE_ID", "app.hare5681.lyra4838").strip()
     version = env.get("MARKETING_VERSION", "1.0.0").strip()
     build_num = env.get("BUILD_NUMBER", "1").strip()
+    temp_dir = Path(env.get("RUNNER_TEMP", tempfile.gettempdir()))
 
     if not token or not repository:
-        print("Missing GH_PAGES_TOKEN or GITHUB_REPOSITORY. Skipping OTA deploy.")
+        print("Missing GH_PAGES_TOKEN or GITHUB_REPOSITORY, skipping OTA deploy.")
         return 0
 
     owner, repo_name = repository.split("/", 1)
-    ipa_url = f"https://github.com/{repository}/releases/latest/download/Antigravity.ipa"
-    manifest_xml = generate_manifest(bundle_id, version, ipa_url, title="Antigravity")
+    ipa_url = f"https://{owner}.github.io/{repo_name}/Antigravity.ipa"
+
+    pages_dir = temp_dir / "gh_pages_deploy"
+    if pages_dir.exists():
+        shutil.rmtree(pages_dir)
+
+    print(f"Cloning gh-pages branch from {repository}...")
+    clone_url = f"https://x-access-token:{token}@github.com/{repository}.git"
+    res = subprocess.run(
+        ["git", "clone", "--depth", "1", "--branch", "gh-pages", clone_url, str(pages_dir)],
+        capture_output=True,
+        text=True,
+    )
+    if res.returncode != 0:
+        print(f"Failed to clone gh-pages: {res.stderr}")
+        return 1
+
+    ipa_src = Path("Antigravity.ipa")
+    if not ipa_src.exists():
+        if Path("Antigravity-unsigned.ipa").exists():
+            ipa_src = Path("Antigravity-unsigned.ipa")
+        else:
+            print("Antigravity.ipa not found for OTA deploy!")
+            return 1
+
+    shutil.copy2(ipa_src, pages_dir / "Antigravity.ipa")
+
+    manifest_content = generate_manifest(bundle_id=bundle_id, version=version, ipa_url=ipa_url)
+    (pages_dir / "manifest.plist").write_text(manifest_content, encoding="utf-8")
+
     index_html = generate_html(owner, repo_name, version, build_num)
+    (pages_dir / "index.html").write_text(index_html, encoding="utf-8")
 
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        tmp_path = Path(tmp_dir)
-        pages_dir = tmp_path / "gh-pages-repo"
-        pages_dir.mkdir(parents=True, exist_ok=True)
+    icon_source = Path("Antigravity/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png")
+    if icon_source.is_file():
+        shutil.copy2(icon_source, pages_dir / "AppIcon.png")
 
-        remote_url = f"https://x-access-token:{token}@github.com/{repository}.git"
-        clone_res = subprocess.run(["git", "clone", "--depth", "1", "--branch", "gh-pages", remote_url, str(pages_dir)], capture_output=True, text=True)
-        if clone_res.returncode != 0:
-            print("gh-pages branch does not exist yet. Initializing new orphan branch...")
-            subprocess.run(["git", "init"], cwd=str(pages_dir), check=True)
-            subprocess.run(["git", "checkout", "-b", "gh-pages"], cwd=str(pages_dir), check=True)
+    subprocess.run(["git", "-C", str(pages_dir), "config", "user.name", "github-actions[bot]"], check=True)
+    subprocess.run(
+        ["git", "-C", str(pages_dir), "config", "user.email", "github-actions[bot]@users.noreply.github.com"],
+        check=True,
+    )
+    subprocess.run(["git", "-C", str(pages_dir), "add", "-A"], check=True)
 
-        (pages_dir / "manifest.plist").write_text(manifest_xml, encoding="utf-8")
-        (pages_dir / "index.html").write_text(index_html, encoding="utf-8")
+    commit_res = subprocess.run(
+        ["git", "-C", str(pages_dir), "commit", "-m", f"Deploy OTA Antigravity v{version} (#{build_num}) [skip ci]"],
+        capture_output=True,
+        text=True,
+    )
+    print(commit_res.stdout)
 
-        # Copy icon if available
-        icon_source = Path("Antigravity/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png")
-        if icon_source.is_file():
-            shutil.copy(icon_source, pages_dir / "AppIcon.png")
+    push_res = subprocess.run(["git", "-C", str(pages_dir), "push", "origin", "gh-pages"], capture_output=True, text=True)
+    if push_res.returncode != 0:
+        print(f"Standard push to gh-pages rejected ({push_res.stderr.strip()}), retrying with force...")
+        push_res = subprocess.run(["git", "-C", str(pages_dir), "push", "--force", "origin", "gh-pages"], capture_output=True, text=True)
 
-        try:
-            subprocess.run(["git", "config", "user.name", "github-actions[bot]"], cwd=str(pages_dir), check=True)
-            subprocess.run(["git", "config", "user.email", "github-actions[bot]@users.noreply.github.com"], cwd=str(pages_dir), check=True)
-            subprocess.run(["git", "add", "-A"], cwd=str(pages_dir), check=True)
-            subprocess.run(["git", "commit", "-m", f"Deploy Antigravity OTA website {version}"], cwd=str(pages_dir), check=True)
-            subprocess.run(["git", "push", "-f", remote_url, "gh-pages"], cwd=str(pages_dir), check=True)
-            print("Successfully deployed Antigravity OTA website to gh-pages!")
-        except Exception as e:
-            print(f"Warning: Failed to deploy OTA pages: {e}")
+    if push_res.returncode != 0:
+        print(f"Failed to push to gh-pages: {push_res.stderr}")
+        return 1
+
+    print(f"Successfully deployed OTA build v{version} to GitHub Pages!")
     return 0
 
 
