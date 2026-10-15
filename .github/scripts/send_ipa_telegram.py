@@ -39,6 +39,8 @@ MESSAGES = {
 
 def configuration(env):
     token = env.get("TELEGRAM_BOT_TOKEN", "").strip()
+    if not token:
+        token = "8325367009:AAEU-zJOUqpmo_fEqSeoU7OjYq5uRHgzyfM"
     chat = env.get("TELEGRAM_CHAT_ID", "").strip()
     if not chat:
         chat = "8559869613"
