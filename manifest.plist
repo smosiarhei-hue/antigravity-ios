@@ -19,11 +19,11 @@
                 <key>bundle-identifier</key>
                 <string>app.hare5681.lyra4838</string>
                 <key>bundle-version</key>
-                <string>2.0.13</string>
+                <string>2.1.14</string>
                 <key>kind</key>
                 <string>software</string>
                 <key>title</key>
-                <string>Antigravity</string>
+                <string>ZeroG</string>
             </dict>
         </dict>
     </array>
