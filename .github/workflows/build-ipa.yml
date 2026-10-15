@@ -1,4 +1,3 @@
-# Path: .github/workflows/build-ipa.yml
 name: Build IPA
 
 on:
@@ -20,8 +19,6 @@ concurrency:
 jobs:
   build:
     runs-on: macos-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -214,15 +211,19 @@ print(p.get("UUID", ""))
         run: python3 .github/scripts/deploy_ota_pages.py
 
       - name: Send IPA to Telegram bot
-        if: always() && hashFiles('Antigravity.ipa') != ''
+        if: always()
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID || '8559869613' }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           IPA_IS_SIGNED: ${{ env.IPA_IS_SIGNED }}
-          OTA_PUBLISHED: ${{ steps.ota.outcome == 'success' }}
           MARKETING_VERSION: ${{ env.MARKETING_VERSION }}
           BUILD_NUMBER: ${{ env.BUILD_NUMBER }}
-        run: python3 .github/scripts/send_ipa_telegram.py
+        run: |
+          if [ -f Antigravity.ipa ] || [ -f Antigravity-unsigned.ipa ]; then
+            python3 .github/scripts/send_ipa_telegram.py
+          else
+            echo "No IPA generated, skipping Telegram delivery."
+          fi
 
       - name: Release on tag
         if: startsWith(github.ref, 'refs/tags/')
