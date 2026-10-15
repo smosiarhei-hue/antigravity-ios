@@ -1,5 +1,5 @@
 # Path: .github/scripts/deploy_ota_pages.py
-"""Generate OTA manifest.plist and push to gh-pages branch."""
+"""Generate custom Antigravity OTA manifest.plist, site, and deploy to gh-pages."""
 
 import os
 from pathlib import Path
@@ -44,6 +44,276 @@ def generate_manifest(bundle_id: str, version: str, ipa_url: str, title: str = "
 """
 
 
+def generate_html(owner: str, repo_name: str, version: str, build_num: str) -> str:
+    ota_url = f"itms-services://?action=download-manifest&url=https://{owner}.github.io/{repo_name}/manifest.plist"
+    direct_ipa = f"https://github.com/{owner}/{repo_name}/releases/latest/download/Antigravity.ipa"
+
+    return f"""<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Antigravity iOS — Автономный AI-агент кодинга</title>
+    <link rel="icon" type="image/png" href="AppIcon.png">
+    <style>
+        :root {{
+            --bg: #090a0f;
+            --card-bg: rgba(22, 27, 34, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --accent-blue: #58a6ff;
+            --accent-purple: #a371f7;
+            --accent-green: #3fb950;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+        }}
+        * {{
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }}
+        body {{
+            background: radial-gradient(circle at 50% -10%, #1c2333 0%, var(--bg) 80%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justifyContent: center;
+            padding: 32px 16px;
+        }}
+        .container {{
+            max-width: 480px;
+            width: 100%;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border-radius: 36px;
+            padding: 40px 24px;
+            text-align: center;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7), 0 0 40px rgba(88, 166, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }}
+        .icon-wrap {{
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 20px;
+        }}
+        .app-icon {{
+            width: 120px;
+            height: 120px;
+            border-radius: 28px;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 24px rgba(88, 166, 255, 0.35);
+            display: block;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }}
+        h1 {{
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -0.6px;
+            margin-bottom: 6px;
+            background: linear-gradient(135deg, #ffffff 40%, #58a6ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }}
+        .subtitle {{
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }}
+        .badges {{
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }}
+        .badge {{
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+        }}
+        .badge-signed {{
+            background: rgba(63, 185, 80, 0.15);
+            border-color: rgba(63, 185, 80, 0.4);
+            color: #3fb950;
+        }}
+        .btn-install {{
+            display: block;
+            width: 100%;
+            background: linear-gradient(135deg, #1f6feb 0%, #388bfd 100%);
+            color: #ffffff;
+            font-size: 17px;
+            font-weight: 700;
+            text-decoration: none;
+            padding: 16px 24px;
+            border-radius: 18px;
+            box-shadow: 0 8px 24px rgba(31, 111, 235, 0.4);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            margin-bottom: 12px;
+        }}
+        .btn-install:active {{
+            transform: scale(0.98);
+        }}
+        .btn-secondary {{
+            display: block;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--card-border);
+            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            padding: 12px;
+            border-radius: 14px;
+            margin-bottom: 28px;
+        }}
+        .features {{
+            text-align: left;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }}
+        .feature-item {{
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }}
+        .feature-item:last-child {{
+            border-bottom: none;
+        }}
+        .feature-icon {{
+            font-size: 18px;
+            line-height: 1;
+            margin-top: 2px;
+        }}
+        .feature-text h4 {{
+            font-size: 13px;
+            font-weight: 600;
+            color: #f0f6fc;
+        }}
+        .feature-text p {{
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }}
+        .guide {{
+            text-align: left;
+            background: rgba(88, 166, 255, 0.05);
+            border: 1px solid rgba(88, 166, 255, 0.15);
+            border-radius: 16px;
+            padding: 14px;
+        }}
+        .guide-title {{
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--accent-blue);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }}
+        .guide ol {{
+            padding-left: 18px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }}
+        .footer {{
+            margin-top: 24px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.3);
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon-wrap">
+            <img src="AppIcon.png" alt="Antigravity iOS" class="app-icon" />
+        </div>
+
+        <h1>Antigravity</h1>
+        <p class="subtitle">Автономный AI-агент для iOS на базе Swift 6 и Gemini 2.5 Pro</p>
+
+        <div class="badges">
+            <span class="badge badge-signed">✓ Подписанный сертификат</span>
+            <span class="badge">v{version} (билд #{build_num})</span>
+            <span class="badge">SwiftUI 6.0</span>
+        </div>
+
+        <a href="{ota_url}" class="btn-install">
+            📲 Установить на iPhone
+        </a>
+
+        <a href="{direct_ipa}" class="btn-secondary">
+            ⬇️ Скачать файл Antigravity.ipa
+        </a>
+
+        <div class="features">
+            <div class="feature-item">
+                <span class="feature-icon">⚡</span>
+                <div class="feature-text">
+                    <h4>Автономный ReAct движок</h4>
+                    <p>Многоэтапное планирование, выполнение bash-команд и самокоррекция.</p>
+                </div>
+            </div>
+            <div class="feature-item">
+                <span class="feature-icon">🔑</span>
+                <div class="feature-text">
+                    <h4>Google Авторизация & Gemini 2.5</h4>
+                    <p>Контекстное окно до 1 млн токенов и доступ к квотам Google Cloud.</p>
+                </div>
+            </div>
+            <div class="feature-item">
+                <span class="feature-icon">🌐</span>
+                <div class="feature-text">
+                    <h4>Live Web Preview</h4>
+                    <p>Встроенный браузер для мгновенного теста dev-серверов (:3000, :5173).</p>
+                </div>
+            </div>
+            <div class="feature-item">
+                <span class="feature-icon">🎙️</span>
+                <div class="feature-text">
+                    <h4>Голосовой ввод Apple Speech</h4>
+                    <p>Надиктовывайте ТЗ голосом с мгновенной транскрипцией на устройстве.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="guide">
+            <div class="guide-title">
+                ℹ️ Как установить на iPhone:
+            </div>
+            <ol>
+                <li>Откройте эту страницу в <b>Safari</b> на вашем iPhone.</li>
+                <li>Нажмите синюю кнопку <b>«Установить на iPhone»</b>.</li>
+                <li>Подтвердите всплывающее окно iOS <i>«Установить "Antigravity"?»</i>.</li>
+                <li>Если запускаете впервые: перейдите в <b>Настройки ➔ Основные ➔ VPN и управление устройством</b> и нажмите <i>«Доверять»</i>.</li>
+            </ol>
+        </div>
+
+        <p class="footer">Antigravity Cloud • DeepMind & Community</p>
+    </div>
+</body>
+</html>"""
+
+
 def deploy(env=None):
     if env is None:
         env = os.environ
@@ -52,6 +322,7 @@ def deploy(env=None):
     repository = env.get("GITHUB_REPOSITORY", "").strip()
     bundle_id = env.get("BUNDLE_ID", "com.smoze.antigravity").strip()
     version = env.get("MARKETING_VERSION", "1.0.0").strip()
+    build_num = env.get("BUILD_NUMBER", "1").strip()
 
     if not token or not repository:
         print("Missing GH_PAGES_TOKEN or GITHUB_REPOSITORY. Skipping OTA deploy.")
@@ -60,52 +331,35 @@ def deploy(env=None):
     owner, repo_name = repository.split("/", 1)
     ipa_url = f"https://github.com/{repository}/releases/latest/download/Antigravity.ipa"
     manifest_xml = generate_manifest(bundle_id, version, ipa_url, title="Antigravity")
+    index_html = generate_html(owner, repo_name, version, build_num)
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         tmp_path = Path(tmp_dir)
-        (tmp_path / "manifest.plist").write_text(manifest_xml, encoding="utf-8")
-        
-        index_html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Install Antigravity</title>
-    <style>
-        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #0d1117; color: #f0f6fc; text-align: center; padding: 50px 20px; }}
-        .btn {{ display: inline-block; background: #1f6feb; color: white; padding: 14px 28px; border-radius: 12px; font-weight: 600; text-decoration: none; font-size: 18px; margin-top: 20px; }}
-        .card {{ background: #161b22; max-width: 400px; margin: 0 auto; padding: 30px; border-radius: 16px; border: 1px solid #30363d; }}
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h1>🚀 Antigravity iOS</h1>
-        <p>Version: {version}</p>
-        <a class="btn" href="itms-services://?action=download-manifest&url=https://{owner}.github.io/{repo_name}/manifest.plist">Install App</a>
-    </div>
-</body>
-</html>"""
-        (tmp_path / "index.html").write_text(index_html, encoding="utf-8")
+        pages_dir = tmp_path / "gh-pages-repo"
+        pages_dir.mkdir(parents=True, exist_ok=True)
 
-        # Push to gh-pages branch
+        remote_url = f"https://x-access-token:{token}@github.com/{repository}.git"
+        clone_res = subprocess.run(["git", "clone", "--depth", "1", "--branch", "gh-pages", remote_url, str(pages_dir)], capture_output=True, text=True)
+        if clone_res.returncode != 0:
+            print("gh-pages branch does not exist yet. Initializing new orphan branch...")
+            subprocess.run(["git", "init"], cwd=str(pages_dir), check=True)
+            subprocess.run(["git", "checkout", "-b", "gh-pages"], cwd=str(pages_dir), check=True)
+
+        (pages_dir / "manifest.plist").write_text(manifest_xml, encoding="utf-8")
+        (pages_dir / "index.html").write_text(index_html, encoding="utf-8")
+
+        # Copy icon if available
+        icon_source = Path("Antigravity/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png")
+        if icon_source.is_file():
+            shutil.copy(icon_source, pages_dir / "AppIcon.png")
+
         try:
-            remote_url = f"https://x-access-token:{token}@github.com/{repository}.git"
-            subprocess.run(["git", "clone", "--depth", "1", "--branch", "gh-pages", remote_url, "gh-pages-repo"], cwd=tmp_dir, check=False)
-            pages_dir = tmp_path / "gh-pages-repo"
-            if not pages_dir.exists():
-                subprocess.run(["git", "init"], cwd=tmp_dir, check=True)
-                subprocess.run(["git", "checkout", "-b", "gh-pages"], cwd=tmp_dir, check=True)
-                pages_dir = tmp_path
-            
-            shutil.copy(tmp_path / "manifest.plist", pages_dir / "manifest.plist")
-            shutil.copy(tmp_path / "index.html", pages_dir / "index.html")
-
             subprocess.run(["git", "config", "user.name", "github-actions[bot]"], cwd=str(pages_dir), check=True)
             subprocess.run(["git", "config", "user.email", "github-actions[bot]@users.noreply.github.com"], cwd=str(pages_dir), check=True)
-            subprocess.run(["git", "add", "manifest.plist", "index.html"], cwd=str(pages_dir), check=True)
-            subprocess.run(["git", "commit", "-m", f"Deploy OTA manifest {version}"], cwd=str(pages_dir), check=True)
+            subprocess.run(["git", "add", "-A"], cwd=str(pages_dir), check=True)
+            subprocess.run(["git", "commit", "-m", f"Deploy Antigravity OTA website {version}"], cwd=str(pages_dir), check=True)
             subprocess.run(["git", "push", "-f", remote_url, "gh-pages"], cwd=str(pages_dir), check=True)
-            print("Successfully deployed OTA pages!")
+            print("Successfully deployed Antigravity OTA website to gh-pages!")
         except Exception as e:
             print(f"Warning: Failed to deploy OTA pages: {e}")
     return 0
